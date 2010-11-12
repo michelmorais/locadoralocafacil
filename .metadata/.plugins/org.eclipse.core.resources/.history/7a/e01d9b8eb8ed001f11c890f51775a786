@@ -1,0 +1,700 @@
+package Banco;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import javax.swing.JOptionPane;
+
+import Locadora.CATEGORIAFILMES;
+import Locadora.CLIENTES;
+import Locadora.FILMES;
+import Locadora.GENERO;
+import Locadora.LOCACAO;
+import Locadora.PEDIDOLOCACAO;
+import Locadora.PROMOCAO;
+
+public class FireBird 
+{
+	private String DBURL;
+	private String USER;
+	private String PASSW;
+	private Connection Conexao;
+	private ResultSet rs;
+	private java.sql.Statement statement;
+	private String query;
+	private static FireBird instance= null;
+	public static FireBird getInstance()
+	{
+		if(instance==null)
+			instance = new FireBird();
+		instance.connect();
+		return instance;
+	}
+	private FireBird() 
+	{
+		DBURL ="jdbc:firebirdsql:127.0.0.1:C:\\Locafacil\\BD\\LOCAFACIL.FDB";
+		USER = "sysdba";
+		PASSW = "masterkey";
+	}
+	public int getQtdeDisponivel(int id_filmes)
+	{
+		try
+		{
+			query = "select z(qtde_disponivel) from filmes where id_filmes = "+id_filmes+";";
+			rs = statement.executeQuery(query);
+			int qtde_disponivel=-1;
+			if(rs.next())
+				qtde_disponivel = rs.getInt(1);
+			closeConnection();
+			return qtde_disponivel;
+		}
+		catch(Exception e)
+		{
+			return -1;
+		}
+	}
+	public int getId(String Tabela)
+	{
+		try
+		{
+			query = "select z(max(id_" + Tabela + ")) + 1 from " + Tabela + " ;";
+			rs = statement.executeQuery(query);
+			int id=-1;
+			if(rs.next())
+				id = rs.getInt(1);
+			closeConnection();
+			return id;
+		}
+		catch (Exception e) 
+		{
+			JOptionPane.showMessageDialog(null,e.toString());
+			closeConnection();
+			return -1;
+		}
+		
+	}
+	public boolean excluir(int id, String tabela)
+	{
+		query = "delete from "+tabela+" where id_" + tabela + " = " + id + ";";
+		return executeQuery();
+	}
+ 	public boolean insertOrUpdate(CATEGORIAFILMES cs)
+	{
+ 		if(existe_id(cs.id_categoria, "categoria"))
+ 			query = "update categoria set nome = upper(ltrim(rtrim('"+cs.nome +"'))), preco = "+cs.preco+" where id_categoria = " + cs.id_categoria +";";
+ 		else
+ 			query = "insert into categoria (id_categoria, nome, preco) values " +
+				"("+cs.id_categoria+",upper(ltrim(rtrim('"+cs.nome+"'))),"+cs.preco+");";
+		
+		return executeQuery();
+	}
+ 	public boolean insertPedido(PEDIDOLOCACAO pedido)
+	{
+ 		query = "insert into pd_locacao (id_pd_locacao, data, valor_pedido, tipo_pagamento, id_clientes) values " +
+				"("+pedido.id_pd_locacao+",'"+pedido.data+"',"+pedido.valor_pedido+", '"+pedido.tipo_pagamento+"', "+pedido.cliente.id_clientes+");";
+		
+		return executeQuery();
+	}
+ 	public boolean insertOrUpdate(FILMES cs)
+	{
+ 		if(existe_id(cs.id_filmes, "filmes"))
+ 			query = "update filmes set nome = upper(ltrim(rtrim('"+cs.nome +"'))), qtde = "+cs.qtde+", qtde_disponivel = "+cs.qtde_disponivel+", id_genero = "+cs.id_genero+", id_categoria = "+cs.id_categoria+", sinopse = '"+cs.sinopse+"' where id_filmes = " + cs.id_filmes +";";
+ 		else
+ 			query = "insert into filmes (id_filmes, nome,qtde,qtde_disponivel,id_genero,id_categoria,sinopse) values " +
+				"("+cs.id_filmes+",upper(ltrim(rtrim('"+cs.nome+"'))),"+cs.qtde+","+ cs.qtde_disponivel + "," + cs.id_genero + "," + cs.id_categoria + ",'" + cs.sinopse + "');";
+		return executeQuery();
+	}
+ 	public boolean insertOrUpdate(PROMOCAO cs)
+	{
+ 		if(existe_id(cs.id_promocao, "promocao"))
+ 			query = "update promocao set nome = upper(ltrim(rtrim('"+cs.nome +"'))), preco = "+cs.preco+", qtde_inicial = "+cs.qtde_inicial+", qtde_final = "+cs.qtde_final+", qtde_dias = "+cs.qtde_dias+", id_categoria = "+cs.id_categoria+"  where id_promocao = " + cs.id_promocao +";";
+ 		else
+ 			query = "insert into promocao (id_promocao, nome, preco, qtde_inicial, qtde_final, qtde_dias, id_categoria) values " +
+				"("+cs.id_promocao+",upper(ltrim(rtrim('"+cs.nome+"'))),"+cs.preco+","+cs.qtde_inicial+", "+cs.qtde_final+", "+cs.qtde_dias+", "+cs.id_categoria+" );";
+		
+		return executeQuery();
+	}
+ 	public boolean insertItens(FILMES filme,int id_pd_locacao, String total, String data_entrega, String observacao)
+	{
+ 		query = "insert into itens_pd_locacao (id_itens_pd_locacao, nome, id_filmes, qtde, qtde_disponivel, id_pd_locacao, total, observacao, data_entrega)  values " +
+		"("+filme.id_itens_pd_locacao+",upper(ltrim(rtrim('"+filme.nome+"'))),"+filme.id_filmes+","+filme.qtde+", "+filme.qtde_disponivel+", "+id_pd_locacao+", "+total.replace(",", ".")+", '"+observacao+"', '"+data_entrega+"' );";
+		
+		return executeQuery();
+	}
+ 	public boolean insertOrUpdate(CLIENTES cliente)
+	{
+ 		if(existe_id(cliente.id_clientes, "clientes"))
+ 			query = "update clientes set nome = upper(ltrim(rtrim('"+cliente.nome+"')))," +
+ 					"endereco = '"+cliente.endereco+"', cep = '"+cliente.cep+"', " +
+ 					"fone = '"+cliente.fone+"', cpf = trim('"+cliente.cpf+"') " +
+ 					"where id_clientes = " + cliente.id_clientes +";";
+ 		else
+ 			query = "insert into clientes (id_clientes, nome, endereco, fone, cep, cpf) values " +
+				"("+cliente.id_clientes+",upper(ltrim(rtrim('"+cliente.nome+"')))," +
+				"'"+cliente.endereco+"', '"+cliente.fone+"', '"+cliente.cep+"', " +
+				"trim('"+cliente.cpf+"'));";
+		
+		return executeQuery();
+	}
+ 	public boolean insertOrUpdate(GENERO cs)
+	{
+ 		if(existe_id(cs.id_genero, "genero"))
+ 			query = "update genero set nome = upper(ltrim(rtrim('"+cs.nome+"'))) where id_genero = " + cs.id_genero+";";
+ 		else
+ 			query = "insert into genero (id_genero, nome) values " +
+				"("+cs.id_genero+",upper(ltrim(rtrim('"+cs.nome+"'))));";
+		
+		return executeQuery();
+	}
+ 	private boolean executeQuery()
+ 	{
+		try
+		{
+			statement.execute(query);
+			closeConnection();
+			return true;
+		}
+		catch(SQLException e)
+		{
+			String [] strs = e.getMessage().split("\n");
+			if(strs.length>=3)
+				JOptionPane.showMessageDialog(null,strs[2].toUpperCase());
+			else
+				JOptionPane.showMessageDialog(null,e.getMessage().toUpperCase());
+		}
+		closeConnection();
+		return false;
+	}
+ 	private boolean existe_id(int id, String tabela)
+	{
+		try
+		{
+			java.sql.CallableStatement cstmt = Conexao.prepareCall("{call EXISTE_ID(?,?)}");
+			cstmt.setInt(1, id); 
+			cstmt.setString(2,tabela);
+			cstmt.registerOutParameter(1,Types.INTEGER);
+			cstmt.execute();
+			int outParam = cstmt.getInt(1);
+			cstmt.close();
+			closeConnection();
+			return outParam == 1;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return false;
+		}
+	}
+ 	public PEDIDOLOCACAO selectPedidoFromLocacao(int id_pd_locacao)
+ 	{
+ 		try
+ 		{
+	 		query = "select i.nome,i.qtde,c.nome,i.qtde_disponivel,i.data_entrega,i.observacao,i.total, " +
+	 				"cl.id_clientes,cl.nome,cl.endereco,cl.fone,cl.cpf,cl.cep " +
+	 				"from itens_pd_locacao i,PD_LOCACAO l " + 
+	 				"inner join filmes f on i.id_filmes = f.id_filmes "+
+	 				"inner join CATEGORIA c on c.ID_CATEGORIA = f.ID_CATEGORIA " +
+	 				"inner join CLIENTES cl on cl.ID_CLIENTES = l.ID_CLIENTES " +
+	 				"where i.id_pd_locacao = "+ id_pd_locacao + " " +
+	 				"order by i.id_pd_locacao;";
+	 		rs = statement.executeQuery(query.toUpperCase());
+	 		PEDIDOLOCACAO pedido = new PEDIDOLOCACAO();
+	 		pedido.id_pd_locacao = id_pd_locacao;
+	 		boolean clienteOk = false;
+	 		while(rs.next())
+			{
+				FILMES f 					= new FILMES();
+				f.nome						= rs.getString(1);
+				f.qtde						= rs.getInt(2);
+				f.nome_categoria			= rs.getString(3);
+				f.qtde_disponivel			= rs.getInt(4);
+				f.data_entrega				= rs.getString(5);
+				f.observacao				= rs.getString(6);
+				f.preco						= rs.getString(7);
+				pedido.filmes.add(f);
+				if(!clienteOk)
+				{
+					pedido.cliente.id_clientes 	= rs.getInt(8);
+					pedido.cliente.nome			= rs.getString(9);
+					pedido.cliente.endereco		= rs.getString(10);
+					pedido.cliente.fone			= rs.getString(11);
+					pedido.cliente.cpf			= rs.getString(12);
+					pedido.cliente.cep			= rs.getString(13);
+					clienteOk = true;
+				}
+			}
+	 		closeConnection();
+			return pedido;
+ 		}
+ 		catch(Exception exc)
+ 		{
+ 			closeConnection();
+ 			return null;
+ 		}
+ 	}
+ 	
+ 	public boolean existePedido(int id_pd_locacao)
+ 	{
+ 		return existe_id(id_pd_locacao, "pd_locacao");
+ 	}
+ 	public boolean existe_filme(int id_filmes)
+	{
+		try
+		{
+			java.sql.CallableStatement cstmt = Conexao.prepareCall("{call EXISTE_ID(?,?)}");
+			cstmt.setInt(1, id_filmes); 
+			cstmt.setString(2,"filmes");
+			cstmt.registerOutParameter(1,Types.INTEGER);
+			cstmt.execute();
+			int outParam = cstmt.getInt(1);
+			cstmt.close();
+			closeConnection();
+			return outParam == 1;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+ 	public ArrayList<CATEGORIAFILMES> selectBuscaCategoria(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select id_categoria, nome, preco from categoria order by nome;";
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select id_categoria, nome, preco from categoria where nome like '%"+texto_1.trim()+"%' order by nome;";
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select id_categoria, nome, preco from categoria where id_categoria like '%"+texto_2.trim()+"%' order by nome;";
+			else
+				query = "select id_categoria, nome, preco from categoria where nome like '%"+texto_1.trim()+"%' and id_categoria like '%"+texto_2.trim()+"%'  order by nome;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<CATEGORIAFILMES> ls = new ArrayList<CATEGORIAFILMES>();
+			while(rs.next())
+			{
+				CATEGORIAFILMES cf = new CATEGORIAFILMES();
+				cf.id_categoria = rs.getInt(1);
+				cf.nome = rs.getString(2);
+				cf.preco = rs.getDouble(3);
+				ls.add(cf);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+ 	public ArrayList<FILMES> selectBuscaFilmes(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select f.id_filmes,f.nome, f.qtde,f.qtde_disponivel,f.id_genero,f.id_categoria,f.sinopse,c.nome,g.nome from filmes f inner join categoria c on c.id_categoria = f.id_categoria inner join genero g on g.id_genero = f.id_genero order by f.nome;";
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select f.id_filmes,f.nome, f.qtde,f.qtde_disponivel,f.id_genero,f.id_categoria,f.sinopse,c.nome,g.nome from filmes f inner join categoria c on c.id_categoria = f.id_categoria inner join genero g on g.id_genero = f.id_genero where f.nome like '%"+texto_1.trim()+"%' order by f.nome;";
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select f.id_filmes,f.nome, f.qtde,f.qtde_disponivel,f.id_genero,f.id_categoria,f.sinopse,c.nome,g.nome from filmes f inner join categoria c on c.id_categoria = f.id_categoria inner join genero g on g.id_genero = f.id_genero where f.id_filmes like '%"+texto_2.trim()+"%' order by f.nome;";
+			else
+				query = "select f.id_filmes,f.nome, f.qtde,f.qtde_disponivel,f.id_genero,f.id_categoria,f.sinopse,c.nome,g.nome from filmes f inner join categoria c on c.id_categoria = f.id_categoria inner join genero g on g.id_genero = f.id_genero where f.nome like '%"+texto_1.trim()+"%' and f.id_filmes like '%"+texto_2.trim()+"%'  order by f.nome;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<FILMES> ls = new ArrayList<FILMES>();
+			while(rs.next())
+			{
+				FILMES filme = new FILMES();
+				filme.id_filmes			= rs.getInt(1);
+				filme.nome 				= rs.getString(2);
+				filme.qtde 				= rs.getInt(3);
+				filme.qtde_disponivel 	= rs.getInt(4);
+				filme.id_genero			= rs.getInt(5);
+				filme.id_categoria		= rs.getInt(6);
+				filme.sinopse 			= rs.getString(7);
+				filme.nome_categoria	= rs.getString(8);
+				filme.nome_genero		= rs.getString(9);
+				ls.add(filme);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+ 	public ArrayList<LOCACAO> selectBuscaLocacao(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select p.id_pd_locacao, c.nome, FloatToStr(p.valor_pedido, '%6g'), p.data, c.fone, c.cpf from pd_locacao p inner join clientes c on c.id_clientes = p.id_clientes order by p.id_pd_locacao desc;";
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select p.id_pd_locacao, c.nome, FloatToStr(p.valor_pedido, '%6g'), p.data, c.fone, c.cpf from pd_locacao p inner join clientes c on c.id_clientes = p.id_clientes where c.nome like '%"+texto_1.trim()+"%' order by p.id_pd_locacao desc;";
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select p.id_pd_locacao, c.nome, FloatToStr(p.valor_pedido, '%6g'), p.data, c.fone, c.cpf from pd_locacao p inner join clientes c on c.id_clientes = p.id_clientes where p.id_pd_locacao like '%"+texto_2.trim()+"%' order by p.id_pd_locacao desc;";
+			else
+				query = "select p.id_pd_locacao, c.nome, FloatToStr(p.valor_pedido, '%6g'), p.data, c.fone, c.cpf from pd_locacao p inner join clientes c on c.id_clientes = p.id_clientes where p.id_pd_locacao like '%"+texto_2.trim()+"%' and c.nome like '%"+texto_1.trim()+"%' order by p.id_pd_locacao desc;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<LOCACAO> ls = new ArrayList<LOCACAO>();
+			while(rs.next())
+			{
+				LOCACAO locacao 		= new LOCACAO();
+				locacao.id_pd_locacao	= rs.getInt(1);
+				locacao.nome			= rs.getString(2);
+				locacao.valor			= rs.getString(3);
+				locacao.data			= rs.getString(4);
+				locacao.fone			= rs.getString(5);
+				locacao.cpf				= rs.getString(6);
+				ls.add(locacao);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	public ArrayList<PROMOCAO> selectBuscaPromocao(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select p.id_promocao, p.nome, p.preco, p.qtde_inicial, p.qtde_final, p.qtde_dias, p.id_categoria, c.nome, 'de '||p.qtde_inicial||' até '||p.qtde_final from promocao p inner join categoria c on c.id_categoria = p.id_categoria order by p.nome;";
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select p.id_promocao, p.nome, p.preco, p.qtde_inicial, p.qtde_final, p.qtde_dias, p.id_categoria, c.nome, 'de '||p.qtde_inicial||' até '||p.qtde_final from promocao p inner join categoria c on c.id_categoria = p.id_categoria  where p.nome like '%"+texto_1.trim()+"%' order by p.nome;";
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select p.id_promocao, p.nome, p.preco, p.qtde_inicial, p.qtde_final, p.qtde_dias, p.id_categoria, c.nome, 'de '||p.qtde_inicial||' até '||p.qtde_final from promocao p inner join categoria c on c.id_categoria = p.id_categoria  where p.id_promocao like '%"+texto_2.trim()+"%' order by p.nome;";
+			else
+				query = "select p.id_promocao, p.nome, p.preco, p.qtde_inicial, p.qtde_final, p.qtde_dias, p.id_categoria, c.nome, 'de '||p.qtde_inicial||' até '||p.qtde_final from promocao p inner join categoria c on c.id_categoria = p.id_categoria  where p.nome like '%"+texto_1.trim()+"%' and p.id_promocao like '%"+texto_2.trim()+"%'  order by p.nome;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<PROMOCAO> ls = new ArrayList<PROMOCAO>();
+			while(rs.next())
+			{
+				PROMOCAO pr 		= new PROMOCAO();
+				pr.id_promocao 		= rs.getInt(1);
+				pr.nome 			= rs.getString(2);
+				pr.preco 			= rs.getDouble(3);
+				pr.qtde_inicial		= rs.getInt(4);
+				pr.qtde_final		= rs.getInt(5);
+				pr.qtde_dias		= rs.getInt(6);
+				pr.id_categoria		= rs.getInt(7);
+				pr.nome_categoria	= rs.getString(8);
+				pr.qtde_filmes		= rs.getString(9);
+				ls.add(pr);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	public ArrayList<GENERO> selectBuscaGenero(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select id_genero, nome from genero order by nome;";
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select id_genero, nome from genero where nome like '%"+texto_1.trim()+"%' order by nome;";
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select id_genero, nome from genero where id_genero like '%"+texto_2.trim()+"%' order by nome;";
+			else
+				query = "select id_genero, nome from genero where nome like '%"+texto_1.trim()+"%' and id_genero like '%"+texto_2.trim()+"%'  order by nome;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<GENERO> ls = new ArrayList<GENERO>();
+			while(rs.next())
+			{
+				GENERO gen = new GENERO();
+				gen.id_genero = rs.getInt(1);
+				gen.nome = rs.getString(2);
+				ls.add(gen);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	public CLIENTES selectBuscaCliente(int id_cliente)
+	{
+		try
+		{
+			query = "select * from clientes where id_clientes = "+id_cliente+";";
+			rs = statement.executeQuery(query.toUpperCase());
+			CLIENTES gen 	= new CLIENTES();
+			rs.next();
+			gen.id_clientes = rs.getInt(1);
+			gen.nome 		= rs.getString(2);
+			gen.endereco 	= rs.getString(3);
+			gen.fone    	= rs.getString(4);
+			gen.cpf			= rs.getString(5);
+			gen.cep			= rs.getString(6);
+			closeConnection();
+			return gen;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	public FILMES pedidoDeFilme(int id_filmes,int id_clientes)
+	{
+		try
+		{	java.sql.CallableStatement cstmt = Conexao.prepareCall("{call CHAMA_FILME(?,?,?,?,?,?,?)}");
+			cstmt.setInt(1, id_filmes); //id_filmes integer, id_clientes integer
+			cstmt.setInt(2,id_clientes);
+			/*
+			 id_itens_pd_locacao integer,
+	        nome varchar(250),
+	        qtde integer,
+	        qtde_disponivel integer,
+	        id_categoria integer,
+	        nome_categoria varchar(100),
+	        observacao varchar(150)*/
+			cstmt.registerOutParameter(1,Types.INTEGER);
+			cstmt.registerOutParameter(2,Types.VARCHAR);
+			cstmt.registerOutParameter(3,Types.INTEGER);
+			cstmt.registerOutParameter(4,Types.INTEGER);
+			cstmt.registerOutParameter(5,Types.INTEGER);
+			cstmt.registerOutParameter(6,Types.VARCHAR);
+			cstmt.registerOutParameter(7,Types.VARCHAR);
+			cstmt.execute();
+			FILMES filme = new FILMES();
+			filme.id_filmes				= id_filmes;
+			filme.id_itens_pd_locacao	= cstmt.getInt(1);
+			filme.nome 					= cstmt.getString(2);
+			filme.qtde 					= cstmt.getInt(3);
+			filme.qtde_disponivel 		= cstmt.getInt(4);
+			filme.id_categoria			= cstmt.getInt(5);
+			filme.nome_categoria		= cstmt.getString(6);
+			filme.observacao			= cstmt.getString(7);
+			
+			cstmt.close();
+			closeConnection();
+			return filme;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	public class PRECOPROMOCIONAL
+	{
+		public double 	preco;
+		public String 	data;
+		public int		id_categoria;
+	}
+	public PRECOPROMOCIONAL getPreco(int qtde,int id_categoria)
+	{
+		try
+		{	java.sql.CallableStatement cstmt = Conexao.prepareCall("{call calc_itens_pd_locacao(?,?)}");
+			cstmt.setInt(1, qtde); //id_filmes integer, id_clientes integer
+			cstmt.setInt(2,id_categoria);
+			/*
+			 	preco double precision,
+        		data_entrega date
+			 */
+			cstmt.registerOutParameter(1,Types.DOUBLE);
+			cstmt.registerOutParameter(2,Types.VARCHAR);
+			cstmt.execute();
+			PRECOPROMOCIONAL price = new PRECOPROMOCIONAL();
+			price.preco			= cstmt.getDouble(1);
+			price.data			= cstmt.getString(2);
+			price.id_categoria	= id_categoria;
+			cstmt.close();
+			closeConnection();
+			return price;
+		}
+		catch(SQLException e)
+		{
+			String [] strs = e.getMessage().split("\n");
+			if(strs.length>=3)
+				JOptionPane.showMessageDialog(null,strs[2].toUpperCase());
+			else
+				JOptionPane.showMessageDialog(null,e.getMessage().toUpperCase());
+			closeConnection();
+			return null;
+		}
+	}
+	public FILMES selectBuscaFilme(int id_filme)
+	{
+		try
+		{
+			query = "select * from filmes where id_filmes = "+id_filme+";";
+			rs = statement.executeQuery(query.toUpperCase());
+			FILMES gen 			= new FILMES();
+			rs.next();
+			gen.id_filmes 		= rs.getInt(1);
+			gen.nome 			= rs.getString(2);
+			gen.qtde	 		= rs.getInt(3);
+			gen.qtde_disponivel = rs.getInt(4);
+			gen.id_genero		= rs.getInt(5);
+			gen.id_categoria	= rs.getInt(6);
+			gen.sinopse			= rs.getString(7);
+			closeConnection();
+			return gen;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	public ArrayList<CLIENTES> selectBuscaClientes(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select * from clientes order by nome;";
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select * from clientes where nome like '%"+texto_1.trim()+"%' order by nome;";
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select * from clientes where id_clientes like '%"+texto_2.trim()+"%' order by nome;";
+			else
+				query = "select * from clientes where nome like '%"+texto_1.trim()+"%' and id_clientes like '%"+texto_2.trim()+"%'  order by nome;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<CLIENTES> ls = new ArrayList<CLIENTES>();
+			while(rs.next())
+			{
+				CLIENTES gen 	= new CLIENTES();
+				gen.id_clientes = rs.getInt(1);
+				gen.nome 		= rs.getString(2);
+				gen.endereco 	= rs.getString(3);
+				gen.fone    	= rs.getString(4);
+				gen.cpf			= rs.getString(5);
+				gen.cep			= rs.getString(6);
+				ls.add(gen);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	public void closeConnection() 
+	{
+		try
+		{	statement.close();}
+		catch (Exception e){};
+		try
+		{	rs.close();	}
+		catch(Exception e){};
+		try
+		{	Conexao.close();}
+		catch (Exception e){};
+	}
+	private boolean tryConnect()
+	{
+		try 
+		{
+			if(statement!=null && !statement.isClosed())
+				statement.close();
+			if(Conexao!= null && !Conexao.isClosed())
+				Conexao.close();
+			Class.forName("org.firebirdsql.jdbc.FBDriver");
+			Conexao = DriverManager.getConnection(DBURL, USER, PASSW);
+			Conexao.setAutoCommit(true);
+			
+			statement = Conexao.createStatement();
+			return true;
+		} 
+		catch (Exception e) 
+		{
+			return false;
+		}
+	}
+	public boolean connect()
+	{
+		try 
+		{
+			if(!tryConnect())
+				throw (new Exception());
+			return true;
+		} 
+		catch (Exception e) 
+		{
+			try
+			{
+				String currentDir = new File("").getAbsolutePath();
+				DBURL ="jdbc:firebirdsql:127.0.0.1:" + currentDir + "\\LOCAFACIL.FDB";
+				if(!tryConnect())
+					throw (new Exception());
+				return true;
+			}
+			catch (Exception ex) 
+			{ 
+				try 
+				{ 
+					FileReader fr = new FileReader("locafacil.txt"); 
+					BufferedReader br = new BufferedReader(fr);
+					String caminhoCompleto = br.readLine(); 
+					DBURL ="jdbc:firebirdsql:127.0.0.1:" + caminhoCompleto; 
+					if(!tryConnect())
+						throw (new Exception());
+					return true;
+				}
+				catch (Exception exc) 
+				{
+					return false;
+				}
+			}
+		}
+	}
+	public String getDBURL() 
+	{
+		return DBURL;
+	}
+	public void setDBURL(String dBURL) 
+	{
+		DBURL = dBURL;
+	}
+	public void setPath(String path)
+	{
+		DBURL ="jdbc:firebirdsql:127.0.0.1:" + path;
+	}
+	public String getUSER() 
+	{
+		return USER;
+	}
+	public void setUSER(String uSER) 
+	{
+		USER = uSER;
+	}
+	public String getPASSW() 
+	{
+		return PASSW;
+	}
+	public void setPASSW(String pASSW) 
+	{
+		PASSW = pASSW;
+	}
+	/*
+	Contador que funciona!!!!!!!!!! 
+	statement = Conexao.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+	ResultSet rs = statement.executeQuery(query);
+	rs.last(); 
+	int rowcount = rs.getRow(); 
+	rs.first();
+	int count=0;*/
+}
