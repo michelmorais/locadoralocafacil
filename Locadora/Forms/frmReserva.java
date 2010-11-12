@@ -60,6 +60,16 @@ public class frmReserva extends JPanel implements ActionListener
 		instance.frame.requestFocus();
 		return instance;
 	}
+	public static frmReserva getInstance(RESERVA reserva)
+	{
+		if(instance==null)
+			instance = new frmReserva();
+		instance.frame.requestFocus();
+		instance.reserva = reserva;
+		instance.setCliente(reserva.cliente);
+		instance.showValues();
+		return instance;
+	}
 	public static frmReserva retornaClienteSelecionado(CLIENTES cliente)
 	{
 		if(instance==null)
@@ -68,12 +78,12 @@ public class frmReserva extends JPanel implements ActionListener
 		instance.setCliente(cliente);
 		return instance;
 	}
-	public static frmReserva retornaFilmeSelecionado(FILMES filme)
+	public static frmReserva retornaFilmeSelecionado(int id_filmes)
 	{
 		if(instance==null)
 			instance = new frmReserva();
 		instance.frame.requestFocus();
-		//instance.setFilme(filme);
+		instance.txtIdFilmes.setText(String.valueOf(id_filmes));
 		return instance;
 	}
 	
@@ -256,7 +266,6 @@ public class frmReserva extends JPanel implements ActionListener
 			JOptionPane.showMessageDialog(null,"Filme não encontrado.");
 			return;
 		}
-		txtIdFilmes.setText("");
 		if (!FireBird.getInstance().existe_filme(id_filme))
 		{
 			JOptionPane.showMessageDialog(null,"Filme não encontrado.");
@@ -270,6 +279,7 @@ public class frmReserva extends JPanel implements ActionListener
 		}
 		reserva.filmes.add(filme);
 		showValues();
+		txtIdFilmes.setText("");
 	}
 	private void onPressed_ExcluirFilmes()
 	{
@@ -319,7 +329,21 @@ public class frmReserva extends JPanel implements ActionListener
 	}
 	private void onPressed_btnConfirmar()
 	{
-		
+		if(lblNome.getText().isEmpty())
+		{
+			JOptionPane.showMessageDialog(null,"Cliente não selecionado.");
+			return;
+		}
+		if(reserva.filmes.size()==0)
+		{
+			JOptionPane.showMessageDialog(this,"Sua lista de filmes está vazia!");
+			return;
+		}
+		int i = cmbSituacao.getSelectedIndex();
+		String situacao = (String) cmbSituacao.getItemAt(i);
+		reserva.situacao = situacao.toUpperCase();
+		if(FireBird.getInstance().insertOrUpdate(reserva))
+			this.frame.dispose();
 	}
 	private void onPressed_btnPesquisarCodCliente()
 	{

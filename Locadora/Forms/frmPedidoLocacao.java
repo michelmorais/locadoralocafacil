@@ -21,10 +21,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
+
 
 import Banco.FireBird;
 import Banco.FireBird.PRECOPROMOCIONAL;
@@ -35,7 +33,7 @@ import Locadora.FILMES;
 import Locadora.PEDIDOLOCACAO;
 import Locadora.UTIL;
 
-public class frmPedidoLocacao extends JPanel implements ActionListener,TableModelListener
+public class frmPedidoLocacao extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = 1L;
 	private JLabel lblNumero;
@@ -309,7 +307,6 @@ public class frmPedidoLocacao extends JPanel implements ActionListener,TableMode
         add(jp);
 		add(table);
 		add(table.getTableHeader());
-		table.getModel().addTableModelListener(this);
 		table.setBounds(15, 175, 850, 305);
 		table.setOpaque(true);
 		
@@ -692,16 +689,6 @@ public class frmPedidoLocacao extends JPanel implements ActionListener,TableMode
 		{
 			return false;
 		}
-	}
-	@Override
-	public void tableChanged(TableModelEvent e)
-	{
-		int row = e.getFirstRow();
-        int column = e.getColumn();
-        TableModel model = (TableModel)e.getSource();
-        //String columnName = model.getColumnName(column);
-        Object data = model.getValueAt(row, column);
-        //System.out.println(data);
 	}
 	public void procuraClientePeloId(int id_cliente)
 	{

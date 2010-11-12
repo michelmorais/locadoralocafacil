@@ -18,6 +18,7 @@ import Locadora.GENERO;
 import Locadora.LOCACAO;
 import Locadora.PEDIDOLOCACAO;
 import Locadora.PROMOCAO;
+import Locadora.RESERVA;
 import Locadora.UTIL;
 
 public class FireBird 
@@ -93,6 +94,29 @@ public class FireBird
  			query = "insert into categoria (id_categoria, nome, preco) values " +
 				"("+cs.id_categoria+",upper(ltrim(rtrim('"+cs.nome+"'))),"+cs.preco+");";
 		
+		return executeQuery();
+	}
+ 	public boolean insertOrUpdate(RESERVA cs)
+	{
+ 		int id_filmes[] = new int[5];
+ 		for(int i=0; i<5; i++)
+ 			id_filmes[i] = -1;
+ 		for(int i=0; i<cs.filmes.size(); i++)
+ 			id_filmes[i] = cs.filmes.get(i).id_filmes;
+ 		
+ 		if(existe_id(cs.id_reserva, "reserva"))
+ 			query = "update reserva set id_clientes = "+ cs.cliente.id_clientes+ ", situacao = "+cs.situacao+ 
+ 			"ID_FILMES_1 =" + id_filmes[0] + "," + 
+ 			"ID_FILMES_2 =" + id_filmes[1] +"," +
+ 			"ID_FILMES_3 =" + id_filmes[2] +"," +
+ 			"ID_FILMES_4 =" + id_filmes[3] +"," +
+ 			"ID_FILMES_5 =" + id_filmes[4] +"," +
+ 			" where id_reserva = " + cs.id_reserva +";";
+ 		else
+ 			query = "insert into reserva (id_clientes, situacao, " +
+ 			"ID_FILMES_1,ID_FILMES_2,ID_FILMES_3,ID_FILMES_4,ID_FILMES_5) values " + "(" +
+ 			cs.cliente.id_clientes+",'"+cs.situacao+"'," + id_filmes[0] + "," + id_filmes[1] + "," +
+ 			id_filmes[2] + "," +id_filmes[3] + "," +id_filmes[4] + ");";
 		return executeQuery();
 	}
  	public boolean insertPedido(PEDIDOLOCACAO pedido)
@@ -319,6 +343,48 @@ public class FireBird
 			return null;
 		}
 	}
+ 	
+ 	public ArrayList<RESERVA> selectBuscaReservas(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
+						"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes order by c.nome;";
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
+				"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes " +
+				"where c.nome like '%"+texto_1.trim()+"%' order by c.nome;";
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
+				"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes " +
+				"where r.id_reserva like '%"+texto_2.trim()+"%' order by c.nome;";
+			else
+				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
+				"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes " +
+				"where c.nome like '%"+texto_1.trim()+"%' and r.id_reserva like '%"+texto_2.trim()+"%'  order by c.nome;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<RESERVA> ls = new ArrayList<RESERVA>();
+			while(rs.next())
+			{
+				RESERVA r = new RESERVA();
+				r.id_reserva		= rs.getInt(1);
+				r.situacao			= rs.getString(2);
+				r.cliente.nome		= rs.getString(3);
+				r.cliente.fone		= rs.getString(4);
+				r.cliente.cpf		= rs.getString(5);
+				ls.add(r);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+ 	
  	public ArrayList<FILMES> selectBuscaFilmes(String texto_1, String texto_2)
 	{
 		try

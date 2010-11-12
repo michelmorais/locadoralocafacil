@@ -27,6 +27,7 @@ import Locadora.FILMES;
 import Locadora.GENERO;
 import Locadora.LOCACAO;
 import Locadora.PROMOCAO;
+import Locadora.RESERVA;
 import Locadora.UTIL;
 
 public class frmBuscaGenerica extends JPanel implements ActionListener
@@ -51,6 +52,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 	private boolean foiPressionadoEditar;
 	private ArrayList<CATEGORIAFILMES> lsCatFilmes;
 	private ArrayList<FILMES> lsFilmes;
+	private ArrayList<RESERVA> lsReserva;
 	private ArrayList<GENERO> lsGenFilmes;
 	private ArrayList<CLIENTES> lsClientes;
 	private ArrayList<PROMOCAO> lsPromocao;
@@ -680,7 +682,15 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				
 			break;
 			case BUSCA_RESERVA:
-				
+				RESERVA reserva =  getReservaFromTable();
+				if(reserva != null)
+				{
+					if(ConfirmaExclusao())
+					{
+						if(FireBird.getInstance().excluir(reserva.id_reserva, "reserva"))
+						onPressed_btnPesquisar();
+					}
+				}
 			break;
 		}
 	}
@@ -693,6 +703,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			case BUSCA_FILMES_PARA_LOCACAO:
 			case BUSCA_FILMES_PARA_RESERVAS:
 				frmCadastroFilmes.getInstance();
+				this.frame.dispose();
 			break;
 			case BUSCA_CATEGORIA_FILMES:
 				frmCategoria.getInstance();
@@ -717,6 +728,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 			case BUSCA_RESERVA:
 				frmReserva.getInstance();
+				this.frame.dispose();
 			break;
 		}
 		//this.frame.dispose();
@@ -748,6 +760,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			case BUSCA_DEVOLUCAO://8 totalCol
 				break;
 			case BUSCA_RESERVA://6 totalCol
+				pesquisaDeReserva();
 				break;
 			case BUSCA_PROMOCAO://6
 				pesquisaPromocao();
@@ -786,6 +799,39 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			model.setValueAt(locacao.data, count, 3);
 			model.setValueAt(locacao.fone, count, 4);
 			model.setValueAt(locacao.cpf, count, 5);
+		}
+	}
+	private void pesquisaDeReserva()
+	{
+		FireBird fireBird = FireBird.getInstance();
+		lsReserva = fireBird.selectBuscaReservas(txtBuscaTexto.getText(), txtBuscaNumero.getText());
+		if(lsReserva==null)
+			return;
+		int size = lsReserva.size();
+		if(size >= 17)
+		{
+			model = new DefaultTableModel(size,7);
+			table.setModel(model);
+			ajusteColunas();
+		}
+		else
+		{
+			int rows = table.getRowCount(),totalCol = 7;
+			for(int count = 0; count < rows; count++)
+			{
+				for(int i=0; i < totalCol;i++)
+					table.getModel().setValueAt("", count, i);
+			}
+		}
+		for(int count=0; count < size; count++)
+		{
+			RESERVA reserva = lsReserva.get(count);
+			model.setValueAt(reserva.id_reserva, count, 0);
+			model.setValueAt(reserva.situacao, count, 1);
+			model.setValueAt(reserva.cliente.nome, count, 2);
+			//model.setValueAt(reserva.nome_genero, count, 3);
+			model.setValueAt(reserva.cliente.fone, count, 4);
+			model.setValueAt(reserva.cliente.cpf, count, 5);
 		}
 	}
 	private void pesquisaDeFilmes()
@@ -1041,6 +1087,24 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			return -1;
 		}
 	}
+	private RESERVA getReservaFromTable()
+	{
+		RESERVA gen = new RESERVA();
+		try
+		{
+			gen.id_reserva = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
+			gen.situacao = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),1);
+			gen.cliente.nome = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),3);
+			gen.cliente.fone = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),5);
+			gen.cliente.cpf = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),6);
+		}
+		catch(Exception ex)
+		{
+			JOptionPane.showMessageDialog(this,"Nenhum registro foi selecionado.");
+			return null;
+		}
+		return gen;
+	}
 	private PROMOCAO getPromocaoFromTable()
 	{
 		PROMOCAO gen = new PROMOCAO();
@@ -1140,17 +1204,8 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			else if(tipoForm == BUSCA_FILMES_PARA_RESERVAS)
 			{
 				Integer id_filme = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
-				int size = lsFilmes.size();
-				for(int i = 0 ; i < size; i++)
-				{
-					FILMES filme = lsFilmes.get(i);
-					if(id_filme == filme.id_filmes)
-					{
-						frmReserva.retornaFilmeSelecionado(filme);
-						this.frame.dispose();
-						break;
-					}
-				}
+				frmReserva.retornaFilmeSelecionado(id_filme);
+				this.frame.dispose();
 			}
 		}
 		catch(Exception exc)
@@ -1197,7 +1252,9 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				frmDevolucaoPagamento.getInstance();
 			break;
 			case BUSCA_RESERVA:
-				
+				RESERVA reserva = getReservaFromTable();
+				if(reserva!=null)
+					frmReserva.getInstance(reserva);
 			break;
 		}
 	}
