@@ -394,7 +394,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				
 			break;
 			case BUSCA_LOCACAO:
-				table.getColumnModel().getColumn(0).setHeaderValue("Número");
+				table.getColumnModel().getColumn(0).setHeaderValue("Cód");
 				table.getColumnModel().getColumn(1).setHeaderValue("Nome do cliente");
 				table.getColumnModel().getColumn(2).setHeaderValue("Valor");
 				table.getColumnModel().getColumn(3).setHeaderValue("Data");
@@ -409,7 +409,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				table.getColumnModel().getColumn(5).setMaxWidth(120);
 			break;
 			case BUSCA_DEVOLUCAO:
-				table.getColumnModel().getColumn(0).setHeaderValue("Número");
+				table.getColumnModel().getColumn(0).setHeaderValue("Cód");
 				table.getColumnModel().getColumn(1).setHeaderValue("Nome do cliente");
 				table.getColumnModel().getColumn(2).setHeaderValue("Valor");
 				table.getColumnModel().getColumn(3).setHeaderValue("Data locação");
@@ -425,7 +425,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				table.getColumnModel().getColumn(5).setMaxWidth(90);
 			break;
 			case BUSCA_RESERVA:
-				table.getColumnModel().getColumn(0).setHeaderValue("Número");
+				table.getColumnModel().getColumn(0).setHeaderValue("Cód");
 				table.getColumnModel().getColumn(1).setHeaderValue("Situação");
 				table.getColumnModel().getColumn(2).setHeaderValue("Nome do cliente");
 				table.getColumnModel().getColumn(3).setHeaderValue("Data");
@@ -810,13 +810,13 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		int size = lsReserva.size();
 		if(size >= 17)
 		{
-			model = new DefaultTableModel(size,7);
+			model = new DefaultTableModel(size,6);
 			table.setModel(model);
 			ajusteColunas();
 		}
 		else
 		{
-			int rows = table.getRowCount(),totalCol = 7;
+			int rows = table.getRowCount(),totalCol = 6;
 			for(int count = 0; count < rows; count++)
 			{
 				for(int i=0; i < totalCol;i++)
@@ -1094,9 +1094,9 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			gen.id_reserva = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
 			gen.situacao = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),1);
-			gen.cliente.nome = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),3);
-			gen.cliente.fone = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),5);
-			gen.cliente.cpf = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),6);
+			gen.cliente.nome = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),2);
+			gen.cliente.fone = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),4);
+			gen.cliente.cpf = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),5);
 		}
 		catch(Exception ex)
 		{

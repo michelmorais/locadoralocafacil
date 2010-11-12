@@ -17,11 +17,11 @@
 <fullyQualifiedTypeName name="java.lang.Double"/>
 <fullyQualifiedTypeName name="javax.swing.JTextField"/>
 <fullyQualifiedTypeName name="java.util.ArrayList"/>
-<fullyQualifiedTypeName name="Locadora.CLIENTES"/>
 <fullyQualifiedTypeName name="Locadora.FILMES"/>
 <fullyQualifiedTypeName name="java.lang.String"/>
 <fullyQualifiedTypeName name="Forms.frmReserva"/>
 <fullyQualifiedTypeName name="Locadora.RESERVA"/>
-<fullyQualifiedTypeName name="Banco.FireBird"/>
 <fullyQualifiedTypeName name="Locadora.UTIL"/>
+<fullyQualifiedTypeName name="Banco.FireBird"/>
+<fullyQualifiedTypeName name="Locadora.CLIENTES"/>
 </qualifiedTypeNameHistroy>
