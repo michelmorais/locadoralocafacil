@@ -1,34 +1,34 @@
 package Forms;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.TableModel;
 
+import Banco.FireBird;
+import Locadora.CLIENTES;
+import Locadora.FILMES;
+import Locadora.RESERVA;
 import Locadora.UTIL;
 
-public class frmReserva extends JPanel implements ActionListener,TableModelListener,FocusListener
+public class frmReserva extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = 1L;
 	private JLabel lblCodigo;
 	private JLabel lblIdReserva;
 	private JLabel lblCodCliente;
-	private JTextField txtIdCliente;
+	private JLabel lblIdCliente;
 	private JLabel lblEnderecoFixo;
 	private JLabel lblEndereco;
 	private JLabel lblNomeFixo;
@@ -38,6 +38,9 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 	private JLabel lblCepFixo;
 	private JLabel lblCep;
 	private JLabel lblFilmes;
+	private JTextField txtIdFilmes;
+	private JButton btnAcrescentarFilme;
+	private JButton btnExcluirFilme;
 	private JLabel lblSituacao;
 	private JComboBox cmbSituacao;
 	private JTable table;
@@ -46,6 +49,7 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 	private JButton btnConfirmar;
 	private JButton btnPesquisarCodCliente;
 	private JFrame frame;
+	private RESERVA reserva;
 	
 	private static frmReserva instance = null;
 	
@@ -56,24 +60,58 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 		instance.frame.requestFocus();
 		return instance;
 	}
+	public static frmReserva retornaClienteSelecionado(CLIENTES cliente)
+	{
+		if(instance==null)
+			instance = new frmReserva();
+		instance.frame.requestFocus();
+		instance.setCliente(cliente);
+		return instance;
+	}
+	public static frmReserva retornaFilmeSelecionado(FILMES filme)
+	{
+		if(instance==null)
+			instance = new frmReserva();
+		instance.frame.requestFocus();
+		//instance.setFilme(filme);
+		return instance;
+	}
+	
+	
+	private void setCliente(CLIENTES cliente_)
+	{
+		if(cliente_==null)
+			return;
+		reserva.cliente = cliente_;
+		lblIdCliente.setText(String.valueOf(reserva.cliente.id_clientes));
+		lblNome.setText(reserva.cliente.nome);
+		lblCpf.setText(reserva.cliente.cpf);
+		lblCep.setText(reserva.cliente.cep);
+		lblEndereco.setText(reserva.cliente.endereco);
+	}
 
 	private frmReserva() 
 	{
-		String[] cmbSituacaoItems = { "Item 1", "Item 2", "Item 3" };
-		lblCodigo = new JLabel("Código");
-		lblIdReserva = new JLabel("15");
+		reserva = new RESERVA();
+		reserva.id_reserva = FireBird.getInstance().getId("reserva");
+		String[] cmbSituacaoItems = { "Aguardando", "Locado", "Concluido" };
+		lblCodigo = new JLabel("Cod");
+		lblIdReserva = new JLabel(String.valueOf(reserva.id_reserva));
 		lblCodCliente = new JLabel("Cód Cliente");
-		txtIdCliente = new JTextField(5);
-		btnPesquisarCodCliente = new JButton(".");
+		lblIdCliente = new JLabel();
+		btnPesquisarCodCliente = new JButton("...");
 		lblEnderecoFixo = new JLabel("Endereço");
-		lblEndereco = new JLabel("dsfjsdafhbsajfhsabchjsa");
+		lblEndereco = new JLabel();
 		lblNomeFixo = new JLabel("Nome");
-		lblNome = new JLabel("ajsbsajchschshfcs");
+		lblNome = new JLabel();
 		lblCpfFixo = new JLabel("CPF");
-		lblCpf = new JLabel("12121245154");
+		lblCpf = new JLabel();
 		lblCepFixo = new JLabel("CEP");
-		lblCep = new JLabel("2154545");
+		lblCep = new JLabel();
 		lblFilmes = new JLabel("Filmes");
+		txtIdFilmes = new JTextField(5);
+		btnAcrescentarFilme = new JButton("+");
+		btnExcluirFilme = new JButton("-");
 		table = new JTable(9,2);
 		btnPesquisarFilmes = new JButton("p");
 		btnCancelar = new JButton("Cancelar");
@@ -98,8 +136,6 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
         add(jp);
 		add(table);
 		add(table.getTableHeader());
-		table.getModel().addTableModelListener(this);
-		table.addFocusListener(this);
 		table.setOpaque(true);
 
 		setPreferredSize(new Dimension(461, 312));
@@ -113,7 +149,7 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 		add(lblCodigo);
 		add(lblIdReserva);
 		add(lblCodCliente);
-		add(txtIdCliente);
+		add(lblIdCliente);
 		add(btnPesquisarCodCliente);
 		add(lblEnderecoFixo);
 		add(lblEndereco);
@@ -124,16 +160,22 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 		add(lblCepFixo);
 		add(lblCep);
 		add(lblFilmes);
+		add(txtIdFilmes);
 		add(btnPesquisarFilmes);
 		add(btnCancelar);
 		add(btnConfirmar);
 		add(lblSituacao);
 		add(cmbSituacao);
+		add(btnAcrescentarFilme);
+		add(btnExcluirFilme);
+		
+		btnExcluirFilme.addActionListener(this);
+		btnAcrescentarFilme.addActionListener(this);
 
 		lblCodigo.setBounds(15, 15, 50, 25);
 		lblIdReserva.setBounds(65, 15, 70, 25);
 		lblCodCliente.setBounds(15, 45, 75, 25);
-		txtIdCliente.setBounds(90, 45, 60, 25);
+		lblIdCliente.setBounds(90, 45, 60, 25);
 		btnPesquisarCodCliente.setBounds(155, 45, 30, 25);
 		lblEnderecoFixo.setBounds(15, 110, 65, 25);
 		lblEndereco.setBounds(85, 110, 225, 25);
@@ -144,8 +186,16 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 		lblCepFixo.setBounds(325, 110, 30, 25);
 		lblCep.setBounds(360, 110, 95, 25);
 		lblFilmes.setBounds(15, 145, 60, 25);
+		txtIdFilmes.setBounds(65, 145, 60, 25);
+		btnPesquisarFilmes.setBounds(130, 145, 30, 25);
+		btnAcrescentarFilme.setBounds(165, 145, 45, 25);
+		btnExcluirFilme.setBounds(215, 145, 45, 25);
+		btnExcluirFilme.setForeground(new Color(255,0,0));
+		btnAcrescentarFilme.setForeground(new Color(255,0,0));
+		
+		
 		table.setBounds(15, 190, 425, 80);
-		btnPesquisarFilmes.setBounds(80, 145, 30, 25);
+		
 		btnConfirmar.setBounds(85, 280, 100, 25);
 		btnCancelar.setBounds(255, 280, 100, 25);
 		lblSituacao.setBounds(140, 15, 65, 25);
@@ -182,6 +232,86 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 			onPressed_btnPesquisarCodCliente();
 		else if(e.getSource() == btnPesquisarFilmes)
 			onPressed_btnPesquisarFilmes();
+		else if(e.getSource() == btnAcrescentarFilme)
+			onPressed_AcrescentaFilmes();
+		else if(e.getSource() == btnExcluirFilme)
+			onPressed_ExcluirFilmes();
+	}
+	private void onPressed_AcrescentaFilmes()
+	{
+		
+		if(reserva.filmes.size()>=5)
+		{
+			JOptionPane.showMessageDialog(this,"Sua lista de filmes está cheia!");
+			return;
+		}
+		if(lblNome.getText().isEmpty())
+		{
+			JOptionPane.showMessageDialog(null,"Cliente não selecionado.");
+			return;
+		}
+		int id_filme = UTIL.getInt(txtIdFilmes.getText(),-1);
+		if(id_filme == -1)
+		{
+			JOptionPane.showMessageDialog(null,"Filme não encontrado.");
+			return;
+		}
+		txtIdFilmes.setText("");
+		if (!FireBird.getInstance().existe_filme(id_filme))
+		{
+			JOptionPane.showMessageDialog(null,"Filme não encontrado.");
+			return;
+		}
+		FILMES filme = FireBird.getInstance().selectBuscaFilme(id_filme);
+		if(filme==null)
+		{
+			JOptionPane.showMessageDialog(null,"Filme não encontrado.");
+			return;
+		}
+		reserva.filmes.add(filme);
+		showValues();
+	}
+	private void onPressed_ExcluirFilmes()
+	{
+		try
+		{
+			int id = (Integer)table.getModel().getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
+			FILMES filme = FireBird.getInstance().selectBuscaFilme(id);
+			int size = reserva.filmes.size();
+			for(int i=0; i<size;i++)
+			{
+				FILMES f = reserva.filmes.get(i);
+				if(filme.id_filmes == f.id_filmes)
+				{
+					reserva.filmes.remove(i);
+					break;
+				}
+			}
+			//if(!FireBird.getInstance().excluir(id_pd_itens_pd_locacao, "itens_pd_locacao"))
+			//	JOptionPane.showMessageDialog(null, "erro id_pd_itens_pd_locacao " + id_pd_itens_pd_locacao);
+		}
+		catch(Exception exc)
+		{
+			JOptionPane.showMessageDialog(null,"Filme não selecionado.");
+		}
+		showValues();
+	}
+	private void showValues()
+	{
+		int size = reserva.filmes.size();
+		int rows = table.getRowCount(),totalCol = 2;
+		for(int count = 0; count < rows; count++)
+		{
+			for(int i=0; i < totalCol;i++)
+				table.getModel().setValueAt("", count, i);
+		}
+		for(int i=0;i <size;i++)
+		{
+			int id_filmes  	= reserva.filmes.get(i).id_filmes;
+			String nome  	= reserva.filmes.get(i).nome;
+			table.getModel().setValueAt(id_filmes, i, 0);
+			table.getModel().setValueAt(nome, i, 1);
+		}
 	}
 	private void onPressed_btnCancelar()
 	{
@@ -189,34 +319,14 @@ public class frmReserva extends JPanel implements ActionListener,TableModelListe
 	}
 	private void onPressed_btnConfirmar()
 	{
-		System.out.println("onPressed_btnConfirmar");
+		
 	}
 	private void onPressed_btnPesquisarCodCliente()
 	{
-		frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_CLIENTES);
+		frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_CLIENTES_PARA_RESERVA);
 	}
 	private void onPressed_btnPesquisarFilmes()
 	{
-		frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_FILMES);
-	}
-	@Override
-	public void tableChanged(TableModelEvent e) 
-	{
-		int row = e.getFirstRow();
-        int column = e.getColumn();
-        TableModel model = (TableModel)e.getSource();
-        //String columnName = model.getColumnName(column);
-        Object data = model.getValueAt(row, column);
-        System.out.println(data);
-	}
-	@Override
-	public void focusGained(FocusEvent arg0) 
-	{
-		System.out.println("Focus");
-	}
-	@Override
-	public void focusLost(FocusEvent arg0) 
-	{
-		System.out.println("Lost Focus");
+		frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_FILMES_PARA_RESERVAS);
 	}
 }

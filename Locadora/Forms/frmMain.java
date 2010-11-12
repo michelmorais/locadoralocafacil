@@ -105,8 +105,8 @@ public class frmMain extends JPanel implements ActionListener,ItemListener
 	@Override
 	public void itemStateChanged(ItemEvent e) 
 	{
-		if(e.getSource()==mnuFilmes)
-			System.out.println("FilmesItens ItemEvent");
+		//if(e.getSource()==mnuFilmes)
+
 	}
 
 	@Override
