@@ -66,6 +66,7 @@ public class frmReserva extends JPanel implements ActionListener
 			instance = new frmReserva();
 		instance.frame.requestFocus();
 		instance.reserva = reserva;
+		//reserva.cliente = FireBird.getInstance().selectBuscaCliente(reserva.cliente.id_clientes);
 		instance.setCliente(reserva.cliente);
 		instance.showValues();
 		return instance;

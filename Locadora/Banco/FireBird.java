@@ -350,18 +350,18 @@ public class FireBird
 		{
 			if(texto_1.isEmpty() && texto_2.isEmpty())
 				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
-						"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes order by c.nome;";
+						"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes order by c.nome;";
 			else if(!texto_1.isEmpty() && texto_2.isEmpty())
 				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
-				"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes " +
+				"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes " +
 				"where c.nome like '%"+texto_1.trim()+"%' order by c.nome;";
 			else if(!texto_2.isEmpty() && texto_1.isEmpty())
 				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
-				"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes " +
+				"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes " +
 				"where r.id_reserva like '%"+texto_2.trim()+"%' order by c.nome;";
 			else
 				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
-				"from reserva  r inner join cliente c on r.id_clientes = c.id_clientes " +
+				"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes " +
 				"where c.nome like '%"+texto_1.trim()+"%' and r.id_reserva like '%"+texto_2.trim()+"%'  order by c.nome;";
 			rs = statement.executeQuery(query.toUpperCase());
 			ArrayList<RESERVA> ls = new ArrayList<RESERVA>();
