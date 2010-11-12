@@ -58,14 +58,16 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 	
 	public static final int BUSCA_FILMES = 1;
 	public static final int BUSCA_FILMES_PARA_LOCACAO = 2;
-	public static final int BUSCA_CATEGORIA_FILMES = 3;
-	public static final int BUSCA_GENEROS_FILMES = 4;
-	public static final int BUSCA_CLIENTES = 5;
-	public static final int BUSCA_CLIENTES_PARA_LOCACAO = 6;
-	public static final int BUSCA_PROMOCAO = 7;
-	public static final int BUSCA_LOCACAO = 8;
-	public static final int BUSCA_DEVOLUCAO = 9;
-	public static final int BUSCA_RESERVA = 10;
+	public static final int BUSCA_FILMES_PARA_RESERVAS = 3;
+	public static final int BUSCA_CATEGORIA_FILMES = 4;
+	public static final int BUSCA_GENEROS_FILMES = 5;
+	public static final int BUSCA_CLIENTES = 6;
+	public static final int BUSCA_CLIENTES_PARA_LOCACAO = 7;
+	public static final int BUSCA_CLIENTES_PARA_RESERVA = 8;
+	public static final int BUSCA_PROMOCAO = 9;
+	public static final int BUSCA_LOCACAO = 10;
+	public static final int BUSCA_DEVOLUCAO = 11;
+	public static final int BUSCA_RESERVA = 12;
 	
 	
 	private static frmBuscaGenerica instanceBuscaFilmes = null;
@@ -83,6 +85,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			case BUSCA_FILMES:
 			case BUSCA_FILMES_PARA_LOCACAO:
+			case BUSCA_FILMES_PARA_RESERVAS:
 				if(instanceBuscaFilmes!=null && instanceBuscaFilmes.foiPressionadoEditar)
 					instanceBuscaFilmes.onPressed_btnPesquisar();
 			break;
@@ -96,6 +99,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				break;			
 			case BUSCA_CLIENTES:
 			case BUSCA_CLIENTES_PARA_LOCACAO:
+			case BUSCA_CLIENTES_PARA_RESERVA:
 				if(instanceBuscaClientes!=null && instanceBuscaClientes.foiPressionadoEditar)
 					instanceBuscaClientes.onPressed_btnPesquisar();
 				break;			
@@ -124,6 +128,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			case BUSCA_FILMES:
 			case BUSCA_FILMES_PARA_LOCACAO:
+			case BUSCA_FILMES_PARA_RESERVAS:
 				if(instanceBuscaFilmes==null)
 					instanceBuscaFilmes = new frmBuscaGenerica(tipo);
 				instanceBuscaFilmes.frame.requestFocus();
@@ -140,6 +145,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				return instanceBuscaGenerosFilmes;
 			case BUSCA_CLIENTES:
 			case BUSCA_CLIENTES_PARA_LOCACAO:
+			case BUSCA_CLIENTES_PARA_RESERVA:
 				if(instanceBuscaClientes==null)
 					instanceBuscaClientes = new frmBuscaGenerica(tipo);
 				instanceBuscaClientes.frame.requestFocus();
@@ -204,6 +210,17 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			mountForm();
 			frmShow("FILMES");
 		break;
+		case BUSCA_FILMES_PARA_RESERVAS:
+			tipoForm = BUSCA_FILMES_PARA_RESERVAS;
+			btnNovo = new JButton("Novo");
+			lblBuscatexto = new JLabel("Nome do filme");
+			lblBuscaNumero = new JLabel("Código do filme");
+			model = new DefaultTableModel(17,7);
+		    table = new JTable(model);
+			ajusteColunas();
+			mountForm();
+			frmShow("FILMES");
+		break;
 		case BUSCA_CATEGORIA_FILMES:
 			tipoForm = BUSCA_CATEGORIA_FILMES;
 			model = new DefaultTableModel(17,3);
@@ -228,6 +245,17 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		break;
 		case BUSCA_CLIENTES_PARA_LOCACAO:
 			tipoForm = BUSCA_CLIENTES_PARA_LOCACAO;
+			btnNovo = new JButton("Novo");
+			lblBuscatexto = new JLabel("Nome do cliente");
+			lblBuscaNumero = new JLabel("Código do cliente");
+			model = new DefaultTableModel(17,6);
+		    table = new JTable(model);
+		    ajusteColunas();
+			mountForm();
+			frmShow("CLIENTES");
+		break;
+		case BUSCA_CLIENTES_PARA_RESERVA:
+			tipoForm = BUSCA_CLIENTES_PARA_RESERVA;
 			btnNovo = new JButton("Novo");
 			lblBuscatexto = new JLabel("Nome do cliente");
 			lblBuscaNumero = new JLabel("Código do cliente");
@@ -310,6 +338,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 			case BUSCA_FILMES:
 			case BUSCA_FILMES_PARA_LOCACAO:
+			case BUSCA_FILMES_PARA_RESERVAS:
 				table.getColumnModel().getColumn(0).setHeaderValue("Cód");
 				table.getColumnModel().getColumn(1).setHeaderValue("Nome");
 				table.getColumnModel().getColumn(2).setHeaderValue("Categoria");
@@ -327,6 +356,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 			case BUSCA_CLIENTES:
 			case BUSCA_CLIENTES_PARA_LOCACAO:
+			case BUSCA_CLIENTES_PARA_RESERVA:
 				table.getColumnModel().getColumn(0).setHeaderValue("Cód");
 				table.getColumnModel().getColumn(1).setHeaderValue("Nome");
 				table.getColumnModel().getColumn(2).setHeaderValue("Endereço");
@@ -462,7 +492,10 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		btnExcluir.setBounds(620, 15, 92, 25);
 		btnPesquisar.setBounds(468, 45, 140, 25);
 		btnCancelar.setBounds(620, 45, 92, 25);
-		if(tipoForm == BUSCA_FILMES_PARA_LOCACAO || tipoForm == BUSCA_CLIENTES_PARA_LOCACAO)
+		if(tipoForm == BUSCA_FILMES_PARA_LOCACAO || 
+				tipoForm == BUSCA_CLIENTES_PARA_LOCACAO || 
+				tipoForm == BUSCA_CLIENTES_PARA_RESERVA ||
+				tipoForm == BUSCA_FILMES_PARA_RESERVAS)
 		{
 			add(btnSelecionar);
 			btnSelecionar.addActionListener(this);
@@ -513,6 +546,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				{
 					case BUSCA_FILMES:
 					case BUSCA_FILMES_PARA_LOCACAO:
+					case BUSCA_FILMES_PARA_RESERVAS:
 						instanceBuscaFilmes = null;
 					break;
 					case BUSCA_CATEGORIA_FILMES:
@@ -522,6 +556,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 					break;
 					case BUSCA_CLIENTES:
 					case BUSCA_CLIENTES_PARA_LOCACAO:
+					case BUSCA_CLIENTES_PARA_RESERVA:
 						instanceBuscaClientes = null;
 					break;
 					case BUSCA_PROMOCAO:
@@ -572,6 +607,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			case BUSCA_FILMES:
 			case BUSCA_FILMES_PARA_LOCACAO:
+			case BUSCA_FILMES_PARA_RESERVAS:
 				FILMES filme =  getFilmeFromTable();
 				if(filme != null)
 				{
@@ -606,6 +642,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 			case BUSCA_CLIENTES:
 			case BUSCA_CLIENTES_PARA_LOCACAO:
+			case BUSCA_CLIENTES_PARA_RESERVA:
 				CLIENTES cliente =  getClientesFromTable();
 				if(cliente != null)
 				{
@@ -654,6 +691,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			case BUSCA_FILMES:
 			case BUSCA_FILMES_PARA_LOCACAO:
+			case BUSCA_FILMES_PARA_RESERVAS:
 				frmCadastroFilmes.getInstance();
 			break;
 			case BUSCA_CATEGORIA_FILMES:
@@ -664,6 +702,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 			case BUSCA_CLIENTES:
 			case BUSCA_CLIENTES_PARA_LOCACAO:
+			case BUSCA_CLIENTES_PARA_RESERVA:
 				frmCadastroCliente.getInstance();
 			break;
 			case BUSCA_LOCACAO:
@@ -692,6 +731,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				break;
 			case BUSCA_FILMES://6 totalCol
 			case BUSCA_FILMES_PARA_LOCACAO:
+			case BUSCA_FILMES_PARA_RESERVAS:
 				pesquisaDeFilmes();
 				break;
 			case BUSCA_GENEROS_FILMES://2 totalCol
@@ -699,6 +739,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				break;
 			case BUSCA_CLIENTES://6 totalCol
 			case BUSCA_CLIENTES_PARA_LOCACAO:
+			case BUSCA_CLIENTES_PARA_RESERVA:
 				pesquisaClientes();
 				break;
 			case BUSCA_LOCACAO://6 totalCol
@@ -1081,6 +1122,36 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 					}
 				}
 			}
+			else if(tipoForm == BUSCA_CLIENTES_PARA_RESERVA)
+			{
+				Integer id_cliente = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
+				int size = lsClientes.size();
+				for(int i = 0 ; i < size; i++)
+				{
+					CLIENTES cliente = lsClientes.get(i);
+					if(id_cliente == cliente.id_clientes)
+					{
+						frmReserva.retornaClienteSelecionado(cliente);
+						this.frame.dispose();
+						break;
+					}
+				}
+			}
+			else if(tipoForm == BUSCA_FILMES_PARA_RESERVAS)
+			{
+				Integer id_filme = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
+				int size = lsFilmes.size();
+				for(int i = 0 ; i < size; i++)
+				{
+					FILMES filme = lsFilmes.get(i);
+					if(id_filme == filme.id_filmes)
+					{
+						frmReserva.retornaFilmeSelecionado(filme);
+						this.frame.dispose();
+						break;
+					}
+				}
+			}
 		}
 		catch(Exception exc)
 		{}
@@ -1108,6 +1179,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 			case BUSCA_CLIENTES:
 			case BUSCA_CLIENTES_PARA_LOCACAO:
+			case BUSCA_CLIENTES_PARA_RESERVA:
 				CLIENTES clientes = getClientesFromTable(); 
 				if(clientes!=null)
 					frmCadastroCliente.getInstance(clientes);

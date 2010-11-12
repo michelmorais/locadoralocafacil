@@ -165,15 +165,15 @@ public class frmDevolucaoPagamento extends JPanel implements ActionListener
 	}
 	private void onPressed_btnConfirmarPagamento()
 	{
-		System.out.println("Confirmar");
+
 	}
 	private void onPressed_btnCancelarMulta()
 	{
-		System.out.println("Cancelar multa");
+
 	}
 	private void onPressed_btnDevolver()
 	{
-		System.out.println("Devolver");
+
 	}
 	private void onPressed_btnSair()
 	{
@@ -181,10 +181,10 @@ public class frmDevolucaoPagamento extends JPanel implements ActionListener
 	}
 	private void onPressed_btnProximo()
 	{
-		System.out.println("Proximo");
+
 	}
 	private void onPressed_btnAnterior()
 	{
-		System.out.println("Anterior");
+
 	}
 }
