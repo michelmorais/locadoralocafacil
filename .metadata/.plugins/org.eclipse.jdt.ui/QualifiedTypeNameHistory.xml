@@ -17,11 +17,15 @@
 <fullyQualifiedTypeName name="java.lang.Double"/>
 <fullyQualifiedTypeName name="javax.swing.JTextField"/>
 <fullyQualifiedTypeName name="java.util.ArrayList"/>
-<fullyQualifiedTypeName name="Locadora.FILMES"/>
 <fullyQualifiedTypeName name="java.lang.String"/>
 <fullyQualifiedTypeName name="Forms.frmReserva"/>
 <fullyQualifiedTypeName name="Locadora.RESERVA"/>
-<fullyQualifiedTypeName name="Locadora.UTIL"/>
 <fullyQualifiedTypeName name="Banco.FireBird"/>
 <fullyQualifiedTypeName name="Locadora.CLIENTES"/>
+<fullyQualifiedTypeName name="javax.swing.JButton"/>
+<fullyQualifiedTypeName name="Forms.frmSinopse"/>
+<fullyQualifiedTypeName name="Locadora.FILMES"/>
+<fullyQualifiedTypeName name="Locadora.UTIL"/>
+<fullyQualifiedTypeName name="com.sun.corba.se.impl.javax.rmi.CORBA.Util"/>
+<fullyQualifiedTypeName name="javax.swing.JScrollPane"/>
 </qualifiedTypeNameHistroy>

@@ -15,4 +15,6 @@ public class FILMES
 	public int 		id_itens_pd_locacao;
 	public String	data_entrega;//usado somente para consulta (inner join)
 	public String	preco;//usado somente para consulta (inner join)
+	public String   situacao;//usado para devolucao
+	public int 		id_devolucao;//usado para devolucao
 }

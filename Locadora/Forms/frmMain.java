@@ -3,8 +3,6 @@ package Forms;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -16,7 +14,7 @@ import javax.swing.JPanel;
 import Banco.FireBird;
 import Locadora.UTIL;
 
-public class frmMain extends JPanel implements ActionListener,ItemListener 
+public class frmMain extends JPanel implements ActionListener 
 {
 	private static final long serialVersionUID = 1L;
 	private JMenuBar mnuMenu;
@@ -33,16 +31,6 @@ public class frmMain extends JPanel implements ActionListener,ItemListener
 	private JMenuItem mnuEntreEmContato;
 	private JMenuItem mnuControleDeDevolucao;
 	
-	public frmBuscaGenerica frmBuscaFilmes;
-	public frmBuscaGenerica frmBuscaCategoriaFilmes;
-	public frmBuscaGenerica frmBuscaGenerosFilmes;
-	public frmBuscaGenerica frmBuscaCliente;
-	public frmBuscaGenerica frmBuscaLocacao;
-	public frmBuscaGenerica frmBuscaDevolucao;
-	public frmBuscaGenerica frmBuscaReserva;
-	public frmBuscaGenerica frmBuscaPromocao;
-	
-	private static FireBird fireBird;
 	
 	public static void main(String[] args) 
 	{
@@ -52,12 +40,10 @@ public class frmMain extends JPanel implements ActionListener,ItemListener
 		frame.pack();
 		UTIL.setMaxiSizeScreen(frame);
 		frame.setVisible(true);
-		fireBird = FireBird.getInstance();
-		if(!fireBird.connect())
+		if(!FireBird.getInstance().testConnection())
 			JOptionPane.showMessageDialog(null, "Falha na conexão com o banco de dados");
-		fireBird.closeConnection();
 	}
-	public frmMain() 
+	private frmMain() 
 	{
 		mnuCadastroMenu = new JMenu("Cadastro");
 		mnuFilmes = new JMenuItem("Filmes");
@@ -103,31 +89,24 @@ public class frmMain extends JPanel implements ActionListener,ItemListener
 	}
 
 	@Override
-	public void itemStateChanged(ItemEvent e) 
-	{
-		//if(e.getSource()==mnuFilmes)
-
-	}
-
-	@Override
 	public void actionPerformed(ActionEvent arg0)
 	{
 		if(arg0.getSource()==mnuFilmes)
-			frmBuscaFilmes = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_FILMES);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_FILMES);
 		else if(arg0.getSource()==mnuCategorias)
-			frmBuscaCategoriaFilmes = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_CATEGORIA_FILMES);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_CATEGORIA_FILMES);
 		else if(arg0.getSource()==mnuGeneros)
-			frmBuscaGenerosFilmes = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_GENEROS_FILMES);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_GENEROS_FILMES);
 		else if(arg0.getSource()==mnuClientes)
-			frmBuscaCliente = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_CLIENTES);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_CLIENTES);
 		else if(arg0.getSource()==mnuPromocao)
-			frmBuscaPromocao = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_PROMOCAO);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_PROMOCAO);
 		else if(arg0.getSource()==mnuLocacao)
-			frmBuscaLocacao = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_LOCACAO);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_LOCACAO);
 		else if(arg0.getSource()==mnuReserva)
-			frmBuscaReserva = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_RESERVA);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_RESERVA);
 		else if(arg0.getSource()==mnuControleDeDevolucao)
-			frmBuscaDevolucao = frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_DEVOLUCAO);
+			frmBuscaGenerica.getInstance(frmBuscaGenerica.BUSCA_DEVOLUCAO);
 		else if(arg0.getSource()==mnuEntreEmContato)
 		{
 			JOptionPane.showMessageDialog(this,"" +

@@ -3,6 +3,7 @@ package Locadora;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.util.Calendar;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -20,6 +21,14 @@ public class UTIL
 	    Point p = new Point(screenWidth / 2 - (frame.getWidth()/2), screenHeight / 2-(frame.getHeight()/2));
 	    frame.setLocation(p);
 	}
+	public static String getDate()
+	{
+		Calendar cal = Calendar.getInstance();
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		int month = cal.get(Calendar.MONTH) + 1;
+		int year = cal.get(Calendar.YEAR);
+		return day + "/" + month + "/"+year;
+	}
 	public static void setMaxiSizeScreen(JFrame frame)
 	{
 		Toolkit tk = Toolkit.getDefaultToolkit();
@@ -36,6 +45,25 @@ public class UTIL
 		Toolkit tk = Toolkit.getDefaultToolkit();
 	    Dimension screenSize = tk.getScreenSize();
 	    return screenSize.width;
+	}
+	public static String formateRS(double valor)
+	{
+		try
+		{
+			String[] r = String.valueOf(valor).replace(".",",").split(",");
+			String ret = r[0];
+			if(r.length>=3)
+				ret+=","+r[1].substring(0, 2);
+			else if(r.length==2)
+				ret+=","+r[1].substring(0, 1) + "0";
+			else if(r.length==1)
+				ret+=",00";
+			return ret;
+		}
+		catch(Exception e)
+		{
+			return null;
+		}
 	}
 	public static boolean isNumericDouble(String str,double maiorQue)
 	{
@@ -100,16 +128,31 @@ public class UTIL
 	}
 	public static String alterMesDiaData(String data)
 	{
-		String result=null;
-		String[] repli =  data.split("/");
-		if(repli.length<=3)
+		try
 		{
-			result=repli[1] + "/";
-			result+=repli[0] + "/";
-			result+=repli[2];
-			return result;
-		}
-		else
+			String result=null;
+			String[] repli =  data.split("/");
+			if(repli.length==3)
+			{
+				result=repli[1] + "/";
+				result+=repli[0] + "/";
+				result+=repli[2];
+				return result;
+			}
+			repli =  data.split("-");
+			if(repli.length==3)
+			{
+				result=repli[2] + "/";
+				result+=repli[1] + "/";
+				result+=repli[0];
+				return result;
+			}
 			return data;
+		}
+		catch (Exception e) 
+		{
+			return data;
+		}
+			
 	}
 }

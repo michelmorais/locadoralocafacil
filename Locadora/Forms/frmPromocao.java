@@ -29,21 +29,21 @@ public class frmPromocao extends JPanel implements ActionListener
 	private JLabel lblCodigo;
 	private JLabel lblIdPromocao;
 	private JLabel lblNome;
-	private JTextField txtNome;
 	private JLabel lblPreco;
-	private JTextField txtPreco;
 	private JLabel lblQuantidadeFilmesDe;
 	private JLabel lblQuantidadeFilmesAte;
+	private JLabel lblQuantidadeDias;
+	private JLabel lblCategoria;
+	private JTextField txtNome;
+	private JTextField txtPreco;
 	private JSpinner nudQuantidadeFilmesDe;
 	private JSpinner nudQuantidadeFilmesAte;
-	private JLabel lblQuantidadeDias;
 	private JSpinner nudQuantidadeDias;
-	private JLabel lblCategoria;
 	private JButton btnConfirmar;
 	private JButton btnCancelar;
 	private JFrame frame;
-	private String strMessage;
 	private JComboBox cmbCategoria;
+	private String strMessage;
 	private PROMOCAO prom;
 	private ArrayList<CATEGORIAFILMES> lsCategoria; 
 
