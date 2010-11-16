@@ -1,0 +1,16 @@
+1:insatale o banco firebird com a opção
+ copiar para a pasta system ou system32
+
+2: o banco LOCAFACIL.FDB deve estar na mesma pasta do executavel 
+locafacil.jar
+
+3: o kinterbasdb-3.3.0.win32-py2.7.msi é o jdbc para o programa no eclipse
+
+4: o jaybird-full-2.1.6.jar é o arquivo de referencia para acesso ao banco no 
+eclipse
+
+5:a dll rfunc.dll deve estar na mesma pasta do bin do FireBired. No meu caso:
+C:\Program Files\Firebird\Firebird_2_1\bin
+
+6: flame robin flamerobin-0.9.3.2048-setup.exe é a interface para o banco caso seja necessária
+
