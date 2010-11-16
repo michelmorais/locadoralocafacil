@@ -3,28 +3,29 @@
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
 		<item value="273" key="DIALOG_WIDTH"/>
 		<item value="120" key="DIALOG_Y_ORIGIN"/>
-		<item value="1188" key="DIALOG_X_ORIGIN"/>
 		<item value="406" key="DIALOG_HEIGHT"/>
+		<item value="1188" key="DIALOG_X_ORIGIN"/>
 		<item value="1|Tahoma|8.4|0|WINDOWS|1|-14|0|0|0|400|0|0|0|1|0|0|0|0|Tahoma" key="DIALOG_FONT_NAME"/>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="true" key="wrap"/>
-		<item value="true" key="casesensitive"/>
 		<item value="false" key="isRegEx"/>
+		<item value="true" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wholeword"/>
-		<item value="BUSCA_RESERVA" key="selection"/>
+		<item value="lengthLines" key="selection"/>
 		<list key="findhistory">
-			<item value="BUSCA_RESERVA"/>
+			<item value="lenthLines"/>
+			<item value="btnVisualizarImpressao"/>
+			<item value="btnPesquisarFilme"/>
 			<item value="pesquisaDeReserva"/>
+			<item value="BUSCA_RESERVA"/>
 			<item value="BUSCA_FILMES_PARA_RESERVAS"/>
 			<item value="cmbCategoria"/>
 			<item value="instanceBuscaReserva"/>
-			<item value="filmes"/>
-			<item value="getReservaFromTable"/>
-			<item value="BUSCA_LOCACAO"/>
 		</list>
 		<list key="replacehistory">
+			<item value="lengthLines"/>
 			<item value="txtIdFilmes"/>
 			<item value="lblIdCliente"/>
 		</list>

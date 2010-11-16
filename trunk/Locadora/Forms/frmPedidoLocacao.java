@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -29,6 +28,7 @@ import Banco.FireBird.PRECOPROMOCIONAL;
 import Locadora.CATEGORIAFILMES;
 import Locadora.CLIENTES;
 import Locadora.CONTACATEGORIA;
+import Locadora.CONTROLERESERVA;
 import Locadora.FILMES;
 import Locadora.PEDIDOLOCACAO;
 import Locadora.UTIL;
@@ -44,11 +44,6 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 	private JLabel lblValorPedido;
 	private JLabel lblCliente;
 	private JLabel lblIdCliente;
-	private JTextField txtIdFilme;
-	private JButton btnPesquisarFilme;
-	private JButton btnAcrescentarFilme;
-	private JButton btnExcluirFilme;
-	private JButton btnPesquisarCliente;
 	private JLabel lblNomeFixo;
 	private JLabel lblNome;
 	private JLabel lblEnderecoFixo;
@@ -59,25 +54,26 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 	private JLabel lblCep;
 	private JLabel lblFilmes;
 	private JLabel lblTipoPagamento;
-	private JRadioButton chkAvista;
-	private JRadioButton chkAprazo;
+	private JTextField txtIdFilme;
+	private JButton btnPesquisarFilme;
+	private JButton btnVisualizarImpressao;
+	private JButton btnAcrescentarFilme;
+	private JButton btnExcluirFilme;
+	private JButton btnPesquisarCliente;
 	private JButton btnConfirmar;
 	private JButton btnCancelar;
-	
+	private JRadioButton chkAvista;
+	private JRadioButton chkAprazo;
 	private JTable table;
 	private DefaultTableModel model;
 	private JFrame frame;
 	private PEDIDOLOCACAO pedido;
-	private boolean habilitaProcuraCliente;
+	private ArrayList<ID_RESERVAS> lsReservas;
+	
+
 	
 	
 	private static frmPedidoLocacao instance = null;
-	public static void inibeBotaoConfirmar()
-	{
-		if(instance==null)
-			return;
-		instance.btnConfirmar.setEnabled(false);
-	}
 	public static frmPedidoLocacao getInstance()
 	{
 		if(instance==null)
@@ -113,6 +109,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		instance.chkAprazo.setEnabled(false);
 		instance.chkAvista.setEnabled(false);
 		instance.pedido = pd;
+		instance.btnVisualizarImpressao.setEnabled(true);
 		int size = pd.filmes.size();
 		double valor=0;
 		for (int i =0; i < size ; i ++)
@@ -124,14 +121,14 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 			instance.model.setValueAt(f.qtde, i, 2);
 			instance.model.setValueAt(f.nome_categoria, i, 3);
 			instance.model.setValueAt(f.qtde_disponivel, i, 4);
-			instance.model.setValueAt(f.data_entrega, i, 5);
+			instance.model.setValueAt(UTIL.alterMesDiaData(f.data_entrega), i, 5);
 			instance.model.setValueAt(f.observacao, i, 6);
-			instance.model.setValueAt(f.preco.replace(".",","), i, 7);
+			instance.model.setValueAt(UTIL.formateRS(Double.parseDouble(f.preco.replace(",", "."))), i, 7);
 			valor+=Double.parseDouble(f.preco.replace(",","."));
 		}
 		if(pd.tipo_pagamento == 'P')
 			instance.chkAprazo.setSelected(true);
-		instance.lblValorPedido.setText(String.valueOf(valor).replace(".",","));
+		instance.lblValorPedido.setText(UTIL.formateRS(valor));
 		instance.btnCancelar.setText("Sair");
 		return instance;
 	}
@@ -140,14 +137,12 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		if(instance==null)
 			instance = new frmPedidoLocacao();
 		instance.frame.requestFocus();
-		instance.habilitaProcuraCliente = false;
 		instance.lblIdCliente.setText(String.valueOf(cliente.id_clientes));
 		instance.lblNome.setText(cliente.nome);
 		instance.lblCpf.setText(cliente.cpf);
 		instance.lblCep.setText(cliente.cep);
 		instance.lblEndereco.setText(cliente.endereco);
 		instance.pedido.cliente = cliente;
-		instance.habilitaProcuraCliente = true;
 		return instance;
 	}
 	public static frmPedidoLocacao retornaFilmeSelecionado(FILMES filme)
@@ -155,13 +150,11 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		if(instance==null)
 			instance = new frmPedidoLocacao();
 		instance.frame.requestFocus();
-		instance.habilitaProcuraCliente = false;
 		instance.txtIdFilme.setText(String.valueOf(filme.id_filmes));
-		instance.habilitaProcuraCliente = true;
 		return instance;
 	}
 	
-	public void addFilme(FILMES filme)
+	private void addFilme(FILMES filme)
 	{
 		if(filme==null)
 			return;
@@ -205,7 +198,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 			model.setValueAt("", count, 7);
 		}
 	}
-	public void removeFilme(FILMES filme)
+	private void removeFilme(FILMES filme)
 	{
 		int size = pedido.filmes.size();
 		for(int i= 0; i <size; i++)
@@ -234,14 +227,14 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 
 	private frmPedidoLocacao() 
 	{
-		habilitaProcuraCliente = true;
 		pedido = new PEDIDOLOCACAO();
+		lsReservas = new ArrayList<ID_RESERVAS>();
 		lblNumero = new JLabel("Número da locação");
 		lblidPdLocacao = new JLabel();
-		pedido.data = UTIL.alterMesDiaData(getDate());
+		pedido.data = UTIL.alterMesDiaData(UTIL.getDate());
 		pedido.id_pd_locacao = FireBird.getInstance().getId("pd_locacao");
 		lblidPdLocacao.setText(String.valueOf(pedido.id_pd_locacao));
-		lblDataCadastro = new JLabel(getDate());
+		lblDataCadastro = new JLabel(UTIL.getDate());
 		lblData = new JLabel("Data");
 		lblValor = new JLabel("Valor R$");
 		lblValorPedido = new JLabel("00,00");
@@ -259,6 +252,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		lblFilmes = new JLabel("Filme:");
 		txtIdFilme = new JTextField();
 		btnPesquisarFilme = new JButton("...");
+		btnVisualizarImpressao = new JButton("Impressão");
 		btnAcrescentarFilme = new JButton("+");
 		btnExcluirFilme = new JButton("-");
 		btnExcluirFilme.setForeground(new Color(0,255,0));
@@ -319,6 +313,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		btnAcrescentarFilme.addActionListener(this);
 		btnExcluirFilme.addActionListener(this);
 		btnPesquisarFilme.addActionListener(this);
+		btnVisualizarImpressao.addActionListener(this);
 		group.add(chkAprazo);
 		group.add(chkAvista);
 		
@@ -345,6 +340,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		add(lblFilmes);
 		add(txtIdFilme);
 		add(btnPesquisarFilme);
+		add(btnVisualizarImpressao);
 		add(btnAcrescentarFilme);
 		add(btnExcluirFilme);
 		add(lblTipoPagamento);
@@ -374,6 +370,8 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		lblFilmes.setBounds(15, 135, 70, 25);
 		txtIdFilme.setBounds(90, 135, 70, 25);
 		btnPesquisarFilme.setBounds(170, 135, 25, 25);
+		btnVisualizarImpressao.setBounds(575, 500, 105, 55);
+		btnVisualizarImpressao.setEnabled(false);
 		btnAcrescentarFilme.setBounds(200, 135, 45, 25);
 		btnExcluirFilme.setBounds(250, 135, 45, 25);
 		btnExcluirFilme.setForeground(new Color(255,0,0));
@@ -385,14 +383,6 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		btnCancelar.setBounds(390, 500, 105, 55);
 		btnConfirmar.setBounds(205, 500, 105, 55);
 		frmShow();
-	}
-	private String getDate()
-	{
-		Calendar cal = Calendar.getInstance();
-		int day = cal.get(Calendar.DAY_OF_MONTH);
-		int month = cal.get(Calendar.MONTH) + 1;
-		int year = cal.get(Calendar.YEAR);
-		return day + "/" + month + "/"+year;
 	}
 	private void frmShow() 
 	{
@@ -411,7 +401,15 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 				{
 					FireBird.getInstance().insertPedido(instance.pedido);
 					if (!instance.ConfirmaPedidoAoFechar())
+					{
 						FireBird.getInstance().excluir(instance.pedido.id_pd_locacao, "pd_locacao");
+						int size =instance.pedido.filmes.size();
+						for(int i=0;i<size;i++)
+						{
+							FILMES f = instance.pedido.filmes.get(i);
+							restauraReserva(f.id_filmes);
+						}
+					}
 					
 				}
 				frmPedidoLocacao.instance=null;
@@ -436,6 +434,8 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 			onPressed_AcrescentaFilmes();
 		else if(e.getSource() == btnExcluirFilme)
 			onPressed_ExcluirFilmes();
+		else if(e.getSource() == btnVisualizarImpressao)
+			frmSinopse.impressao(pedido);
 		else if(e.getSource()==btnCancelar)
 		{   
 			frame.dispose();
@@ -458,6 +458,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 			if(FireBird.getInstance().insertPedido(pedido))
 			{
 				this.frame.dispose();
+				frmSinopse.impressao(pedido);
 			}
 		}
 	}
@@ -511,9 +512,9 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		for(int i=0;i <size;i++)
 		{
 			int id_categoria  	= pedido.ListaCategorias.get(i).id_categoria;
-			int sizeFilmes = pedido.filmes.size();
-			String total="";
-			String  data ="";
+			int sizeFilmes 		= pedido.filmes.size();
+			String total		= "";
+			String  data 		= "";
 			for(int j=0; j<sizeFilmes; j++)//acha o preço e data de entrega do filme
 			{
 				if(pedido.filmes.get(j).id_categoria == id_categoria)
@@ -524,6 +525,19 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 				}
 			}
 			FireBird.getInstance().updatePrecosPromocoesFilmes(pedido.id_pd_locacao, id_categoria, total, data);
+		}
+	}
+	private void restauraReserva(int id_filme)
+	{
+		int size = lsReservas.size();
+		for(int j=0; j<size; j++)
+		{
+			ID_RESERVAS res =lsReservas.get(j);
+			if(res.id_filme == id_filme)
+			{
+				FireBird.getInstance().restauraReservaFilme(res.id_reserva,res.posicao);
+				break;
+			}
 		}
 	}
 	private void onPressed_ExcluirFilmes()
@@ -540,7 +554,9 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 				f = pedido.filmes.get(i);
 				if(filme.id_filmes == f.id_filmes)
 				{
+					size = lsReservas.size();
 					id_pd_itens_pd_locacao = f.id_itens_pd_locacao;
+					restauraReserva(filme.id_filmes);
 					break;
 				}
 			}
@@ -555,7 +571,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		}
 		showValues();
 	}
-	public void updateFilme()
+	private void updateFilme()
 	{
 		int sizeFilmes = pedido.filmes.size();
 		int rows = table.getRowCount(),totalCol = 8;
@@ -633,14 +649,40 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 						String data_entrega = (String)model.getValueAt(i,5);
 						String observacao = (String)model.getValueAt(i,6);
 						String preco_filme = (String)model.getValueAt(i,7);
-						if(!FireBird.getInstance().insertItens(filme, pedido.id_pd_locacao, preco_filme, UTIL.alterMesDiaData(data_entrega), observacao))
+						if(!FireBird.getInstance().insertItens(filme, pedido.id_pd_locacao, preco_filme, UTIL.alterMesDiaData(data_entrega), observacao,pedido.cliente.id_clientes))
 						{
 							removeFilme(filme);
 							updateFilme();
 						}
+						else
+						{
+							ArrayList<CONTROLERESERVA> reserva  = FireBird.getInstance().getReservaFilme(filme.id_filmes);
+							if(reserva!=null && reserva.size()>0)
+							{
+								CONTROLERESERVA res = reserva.get(0);
+								if(res.id_clientes == pedido.cliente.id_clientes || (res.qtde_disponivel + 1) >= reserva.size())
+								{
+									if(FireBird.getInstance().removeReservaFilme(res.id_reserva,res.posicao))
+									{
+										lsReservas.add(new ID_RESERVAS(res.id_reserva,res.posicao,filme.id_filmes));
+										JOptionPane.showMessageDialog(null,"A reserva do cliente para este filme foi removido automaticamente.");
+									}
+								}
+								else
+								{
+									if(FireBird.getInstance().restauraQtdeDisponivel(filme))
+									{
+										removeFilme(filme);
+										updateFilme();
+										JOptionPane.showMessageDialog(null,"Este filme esta reservado para : " + res.nome);
+									}
+								}
+							}
+						}
 						break;
 					}
 				}
+				btnPesquisarCliente.setEnabled(false);
 			}
 			catch(Exception exc)
 			{
@@ -649,7 +691,7 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 		}
 		showValues();
 	}
-	public boolean setPrecoPromocional(PRECOPROMOCIONAL pp)
+	private boolean setPrecoPromocional(PRECOPROMOCIONAL pp)
 	{
 		try
 		{
@@ -690,19 +732,17 @@ public class frmPedidoLocacao extends JPanel implements ActionListener
 			return false;
 		}
 	}
-	public void procuraClientePeloId(int id_cliente)
+	private class ID_RESERVAS
 	{
-		if(!habilitaProcuraCliente || id_cliente == -1)
-			return;
-		CLIENTES cliente =  FireBird.getInstance().selectBuscaCliente(id_cliente);
-		if(cliente!=null)
+		public int id_filme;
+		public int id_reserva;
+		public int posicao; 
+		public ID_RESERVAS(int id_reserva_,int posicao_,int id_filme_)
 		{
-			lblIdCliente.setText(String.valueOf(cliente.id_clientes));
-			lblNome.setText(cliente.nome);
-			lblCpf.setText(cliente.cpf);
-			lblCep.setText(cliente.cep);
-			lblEndereco.setText(cliente.endereco);
-			pedido.cliente = cliente;
+			id_reserva = id_reserva_;
+			posicao = posicao_;
+			id_filme = id_filme_;
 		}
 	}
+
 }

@@ -13,6 +13,8 @@ import javax.swing.JOptionPane;
 
 import Locadora.CATEGORIAFILMES;
 import Locadora.CLIENTES;
+import Locadora.CONTROLERESERVA;
+import Locadora.DEVOLUCAO;
 import Locadora.FILMES;
 import Locadora.GENERO;
 import Locadora.LOCACAO;
@@ -86,6 +88,7 @@ public class FireBird
 		query = "delete from "+tabela+" where id_" + tabela + " = " + id + ";";
 		return executeQuery();
 	}
+	
  	public boolean insertOrUpdate(CATEGORIAFILMES cs)
 	{
  		if(existe_id(cs.id_categoria, "categoria"))
@@ -96,6 +99,18 @@ public class FireBird
 		
 		return executeQuery();
 	}
+ 	public boolean removeReservaFilme(int id_reserva, int posicao)
+ 	{
+ 		query = "update reserva set situacao_" + posicao + " ='CONCLUIDO' "+
+ 		" where id_reserva = " + id_reserva +";";
+ 		return executeQuery();
+ 	}
+ 	public boolean restauraReservaFilme(int id_reserva, int posicao)
+ 	{
+ 		query = "update reserva set situacao_" + posicao + " = 'AGUARDANDO', situacao =  'AGUARDANDO' "+
+ 		"where id_reserva = " + id_reserva +";";
+ 		return executeQuery();
+ 	}
  	public boolean insertOrUpdate(RESERVA cs)
 	{
  		int id_filmes[] = new int[5];
@@ -103,20 +118,22 @@ public class FireBird
  			id_filmes[i] = -1;
  		for(int i=0; i<cs.filmes.size(); i++)
  			id_filmes[i] = cs.filmes.get(i).id_filmes;
- 		
+ 		cs.data = UTIL.alterMesDiaData(UTIL.getDate());
  		if(existe_id(cs.id_reserva, "reserva"))
- 			query = "update reserva set id_clientes = "+ cs.cliente.id_clientes+ ", situacao = "+cs.situacao+ 
- 			"ID_FILMES_1 =" + id_filmes[0] + "," + 
- 			"ID_FILMES_2 =" + id_filmes[1] +"," +
- 			"ID_FILMES_3 =" + id_filmes[2] +"," +
- 			"ID_FILMES_4 =" + id_filmes[3] +"," +
- 			"ID_FILMES_5 =" + id_filmes[4] +"," +
+ 			query = "update reserva set situacao_1 = '"+cs.situacao_individual[0]+"'," +
+ 					                    "situacao_2 = '"+cs.situacao_individual[1]+"'," +
+ 							            "situacao_3 = '"+cs.situacao_individual[2]+"'," +
+ 									    "situacao_4 = '"+cs.situacao_individual[3]+"',"+
+ 										"situacao_5 = '"+cs.situacao_individual[4]+"'" +
  			" where id_reserva = " + cs.id_reserva +";";
  		else
- 			query = "insert into reserva (id_clientes, situacao, " +
- 			"ID_FILMES_1,ID_FILMES_2,ID_FILMES_3,ID_FILMES_4,ID_FILMES_5) values " + "(" +
- 			cs.cliente.id_clientes+",'"+cs.situacao+"'," + id_filmes[0] + "," + id_filmes[1] + "," +
- 			id_filmes[2] + "," +id_filmes[3] + "," +id_filmes[4] + ");";
+ 			query = "insert into reserva (id_reserva,id_clientes, " +
+ 			"ID_FILMES_1,ID_FILMES_2,ID_FILMES_3,ID_FILMES_4,ID_FILMES_5," +
+ 			"situacao_1,situacao_2,situacao_3,situacao_4,situacao_5,data) values " + "(" +
+ 			cs.id_reserva + "," + cs.cliente.id_clientes+"," + id_filmes[0] + "," + id_filmes[1] + "," +
+ 			id_filmes[2] + "," +id_filmes[3] + "," +id_filmes[4] + ",'"+cs.situacao_individual[0]+"'," +
+ 					"'"+cs.situacao_individual[1]+"','"+cs.situacao_individual[2]+"','"+cs.situacao_individual[3]+"'," +
+ 							"'"+cs.situacao_individual[4]+"','"+cs.data+"');";
 		return executeQuery();
 	}
  	public boolean insertPedido(PEDIDOLOCACAO pedido)
@@ -135,6 +152,12 @@ public class FireBird
 				"("+cs.id_filmes+",upper(ltrim(rtrim('"+cs.nome+"'))),"+cs.qtde+","+ cs.qtde_disponivel + "," + cs.id_genero + "," + cs.id_categoria + ",'" + cs.sinopse + "');";
 		return executeQuery();
 	}
+ 	public boolean restauraQtdeDisponivel(FILMES cs)
+ 	{
+ 		query ="update filmes set qtde_disponivel =" +cs.qtde_disponivel +
+ 		" where id_filmes = " + cs.id_filmes + ";";
+ 		return executeQuery();
+ 	}
  	public boolean insertOrUpdate(PROMOCAO cs)
 	{
  		if(existe_id(cs.id_promocao, "promocao"))
@@ -145,10 +168,10 @@ public class FireBird
 		
 		return executeQuery();
 	}
- 	public boolean insertItens(FILMES filme,int id_pd_locacao, String total, String data_entrega, String observacao)
+ 	public boolean insertItens(FILMES filme,int id_pd_locacao, String total, String data_entrega, String observacao,int id_clientes)
 	{
- 		query = "insert into itens_pd_locacao (id_itens_pd_locacao, nome, id_filmes, qtde, qtde_disponivel, id_pd_locacao, total, observacao, data_entrega, id_categoria)  values " +
-		"("+filme.id_itens_pd_locacao+",upper(ltrim(rtrim('"+filme.nome+"'))),"+filme.id_filmes+","+filme.qtde+", "+filme.qtde_disponivel+", "+id_pd_locacao+", "+total.replace(",", ".")+", '"+observacao+"', '"+data_entrega+"',"+filme.id_categoria+" );";
+ 		query = "insert into itens_pd_locacao (id_itens_pd_locacao, nome, id_filmes, qtde, qtde_disponivel, id_pd_locacao, total, observacao, data_entrega, id_categoria, id_clientes)  values " +
+		"("+filme.id_itens_pd_locacao+",upper(ltrim(rtrim('"+filme.nome+"'))),"+filme.id_filmes+","+filme.qtde+", "+filme.qtde_disponivel+", "+id_pd_locacao+", "+total.replace(",", ".")+", '"+observacao+"', '"+data_entrega+"',"+filme.id_categoria+","+id_clientes+" );";
 		
 		return executeQuery();
 	}
@@ -172,6 +195,74 @@ public class FireBird
  		query = "update itens_pd_locacao set total ="  + total.replace(",", ".")  + ", data_entrega = '" + UTIL.alterMesDiaData(data_entrega) + "' " +
  				"where id_pd_locacao = " + id_pd_locacao + " and id_categoria = " + id_categoria +";";
  		return executeQuery();
+ 	}
+ 	public boolean updatePagamento(int id_devolucao,double valor_a_receber,double valor_recebido,double multa)
+	{
+ 		if(valor_recebido>0)
+ 		{
+ 			query = "update devolucao set valor_a_receber = 0 ," +
+ 			"valor_recebido = " + (valor_recebido) +" , " +
+ 			"multa = " + multa + " where id_devolucao = " + id_devolucao + ";";
+ 		}
+ 		else
+ 		{
+ 			query = "update devolucao set valor_a_receber = 0 ," +
+ 			"valor_recebido = " + (valor_recebido + multa) +" , " +
+ 			"multa = " + multa + " where id_devolucao = " + id_devolucao + ";";
+ 		}	
+		return executeQuery();
+	}
+ 	public ArrayList<CONTROLERESERVA> getReservaFilme(int id_filmes)//devolve  controle de reservas caso haja reserva
+ 	{
+ 		
+ 		try
+ 		{
+ 			ArrayList<CONTROLERESERVA> lsReserva = new ArrayList<CONTROLERESERVA>();
+ 			for(int i=1; i<6 ; i++)
+ 			{
+	 			query = "select c.NOME, c.ID_CLIENTES, r.ID_RESERVA, f.QTDE_DISPONIVEL " +
+	 			"from reserva r " +
+	 			"inner join filmes f on r.ID_FILMES_" + i + " = f.ID_FILMES " +
+	 			"inner join CLIENTES c on c.ID_CLIENTES = r.ID_CLIENTES " +
+	 			"where f.ID_FILMES = " + id_filmes + " and r.SITUACAO_" + i + " = 'AGUARDANDO';";
+	 			
+	 			rs = statement.executeQuery(query);
+				while(rs.next())
+				{	
+					CONTROLERESERVA res = new CONTROLERESERVA();
+					res.nome 			= rs.getString(1);
+					res.id_clientes 	= rs.getInt(2);
+					res.id_reserva		= rs.getInt(3);
+					res.qtde_disponivel = rs.getInt(4);
+					res.posicao 		= i;
+					lsReserva.add(res);
+				}
+ 			}
+ 			closeConnection();
+ 			return lsReserva;
+ 		}
+ 		catch (Exception e) 
+ 		{
+			return null;
+		}
+		
+ 	}
+ 	public boolean updateDevolucao(int id_devolucao,int id_filmes,String situacao)
+ 	{
+ 		query = "update devolucao set situacao = '" + situacao +
+ 			"' where id_devolucao = " + id_devolucao +";";
+ 		if(executeQuery())
+ 		{
+ 			connect();
+ 			if(situacao.compareToIgnoreCase("DEVOLVIDO")==0)
+ 			{	
+ 				query = "update filmes set qtde_disponivel = qtde_disponivel + 1 "+
+	 			"where id_filmes = " + id_filmes + ";";
+ 				return executeQuery();
+ 			}
+			return true;
+ 		}
+ 		return false;
  	}
  	public boolean insertOrUpdate(GENERO cs)
 	{
@@ -292,6 +383,24 @@ public class FireBird
  	{
  		return existe_id(id_pd_locacao, "pd_locacao");
  	}
+ 	public boolean existeFilmeDisponivel(int id_filme)
+ 	{
+ 		try
+		{
+ 			query = "select qtde_disponivel from filmes where id_filmes = " + id_filme + " ;";
+			rs = statement.executeQuery(query);
+			int q=0;
+			if(rs.next())
+				q = rs.getInt(1);
+			closeConnection();
+			return q>0;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return false;
+		}
+ 	}
  	public boolean existe_filme(int id_filmes)
 	{
 		try
@@ -310,6 +419,28 @@ public class FireBird
 		{
 			closeConnection();
 			return false;
+		}
+	}
+ 	public double [] calculaDevolucao(int id_devolucao)
+	{
+		try
+		{
+			double valores[] = new double[2];
+			java.sql.CallableStatement cstmt = Conexao.prepareCall("{call CALC_DEVOLUCAO(?,?)}");
+			cstmt.setInt(1, id_devolucao); 
+			cstmt.registerOutParameter(1,Types.DOUBLE);//multa 
+			cstmt.registerOutParameter(2,Types.DOUBLE);//valor a receber
+			cstmt.execute();
+			valores[0] 			= cstmt.getDouble(1);
+			valores[1] = cstmt.getDouble(2);
+			cstmt.close();
+			closeConnection();
+			return valores;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
 		}
 	}
  	public ArrayList<CATEGORIAFILMES> selectBuscaCategoria(String texto_1, String texto_2)
@@ -349,30 +480,34 @@ public class FireBird
 		try
 		{
 			if(texto_1.isEmpty() && texto_2.isEmpty())
-				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
-						"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes order by c.nome;";
+				query = "select r.id_reserva,r.situacao, c.nome ,c.fone,c.cpf,r.data,c.id_clientes " +
+						"from reserva  r inner join clientes c on c.id_clientes = r.id_clientes order by r.situacao,r.data;";
 			else if(!texto_1.isEmpty() && texto_2.isEmpty())
-				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
+				query = "select r.id_reserva,r.situacao, c.nome ||' - '||f.nome,c.fone,c.cpf,r.data,c.id_clientes " +
 				"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes " +
-				"where c.nome like '%"+texto_1.trim()+"%' order by c.nome;";
+				                "inner join filmes f on f.id_filmes in (r.id_filmes_1,r.id_filmes_2,r.id_filmes_3,r.id_filmes_4,r.id_filmes_5) " +
+				"where c.nome like '%"+texto_1.trim()+"%' or f.nome like '%"+texto_1.trim()+"%' order by r.situacao,r.data;";
 			else if(!texto_2.isEmpty() && texto_1.isEmpty())
-				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
+				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf,r.data,c.id_clientes " +
 				"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes " +
-				"where r.id_reserva like '%"+texto_2.trim()+"%' order by c.nome;";
+				"where r.id_reserva like '%"+texto_2.trim()+"%' order by r.situacao,r.data;";
 			else
-				query = "select r.id_reserva,r.situacao, c.nome,c.fone,c.cpf " +
+				query = "select distinct r.id_reserva,r.situacao, c.nome,c.fone,c.cpf,r.data,c.id_clientes " +
 				"from reserva  r inner join clientes c on r.id_clientes = c.id_clientes " +
-				"where c.nome like '%"+texto_1.trim()+"%' and r.id_reserva like '%"+texto_2.trim()+"%'  order by c.nome;";
+				                "inner join filmes f on f.id_filmes in (r.id_filmes_1,r.id_filmes_2,r.id_filmes_3,r.id_filmes_4,r.id_filmes_5) " +
+				"where (c.nome like '%"+texto_1.trim()+"%' or f.nome like '%"+texto_1.trim()+"%') and r.id_reserva like '%"+texto_2.trim()+"%'  order by r.situacao,r.data;";
 			rs = statement.executeQuery(query.toUpperCase());
 			ArrayList<RESERVA> ls = new ArrayList<RESERVA>();
 			while(rs.next())
 			{
 				RESERVA r = new RESERVA();
-				r.id_reserva		= rs.getInt(1);
-				r.situacao			= rs.getString(2);
-				r.cliente.nome		= rs.getString(3);
-				r.cliente.fone		= rs.getString(4);
-				r.cliente.cpf		= rs.getString(5);
+				r.id_reserva			= rs.getInt(1);
+				r.situacao				= rs.getString(2);
+				r.cliente.nome			= rs.getString(3);
+				r.cliente.fone			= rs.getString(4);
+				r.cliente.cpf			= rs.getString(5);
+				r.data 					= rs.getString(6);
+				r.cliente.id_clientes	= rs.getInt(7);
 				ls.add(r);
 			}
 			closeConnection();
@@ -412,6 +547,68 @@ public class FireBird
 				filme.nome_categoria	= rs.getString(8);
 				filme.nome_genero		= rs.getString(9);
 				ls.add(filme);
+			}
+			closeConnection();
+			return ls;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+ 	public String selectBuscaDataLocacao(int id_pd_locacao,int id_clientes)
+ 	{
+ 		try
+ 		{
+ 			query = "select data from pd_locacao where id_pd_locacao = " + 
+ 			id_pd_locacao + " and id_clientes = " + id_clientes +";";
+ 			rs = statement.executeQuery(query.toUpperCase());
+ 			rs.next();
+			String data = rs.getString(1);
+			closeConnection();
+			return UTIL.alterMesDiaData(data);
+ 		}
+ 		catch(Exception e)
+ 		{
+ 			closeConnection();
+			return null;
+ 		}
+ 	}
+ 	public ArrayList<DEVOLUCAO> selectBuscaDevolucao(String texto_1, String texto_2)
+	{
+		try
+		{
+			if(texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select * from devolucao order by situacao desc, data_entrega "; 
+			else if(!texto_1.isEmpty() && texto_2.isEmpty())
+				query = "select * from devolucao where nome_clientes like'%" + texto_1 + "%' order by situacao desc, data_entrega;"; 
+			else if(!texto_2.isEmpty() && texto_1.isEmpty())
+				query = "select * from devolucao where id_devolucao like'%" + texto_2 + "%' order by situacao desc, data_entrega;";
+			else
+				query = "select * from devolucao where id_devolucao like'%" + texto_2 + "%' and nome_clientes like '%" +texto_1+ "%' order by situacao desc, data_entrega;";
+			rs = statement.executeQuery(query.toUpperCase());
+			ArrayList<DEVOLUCAO> ls = new ArrayList<DEVOLUCAO>();
+			while(rs.next())
+			{
+				DEVOLUCAO dev 				= new DEVOLUCAO();
+				dev.filme.id_devolucao		= rs.getInt("id_devolucao");
+				dev.cliente.id_clientes		= rs.getInt("id_clientes");
+				dev.cliente.nome			= rs.getString("nome_clientes");
+				dev.qtde_locado				= rs.getInt("qtde_locado");
+				dev.filme.id_filmes			= rs.getInt("id_filmes");
+				
+				dev.filme.nome				= rs.getString("nome_filmes");
+				dev.data_entrega			= UTIL.alterMesDiaData(rs.getDate("data_entrega").toString());
+				//dev.data_locacao			= rs.getDate("data_locacao").toString();
+				dev.valor_unitario			= rs.getDouble("valor_unitario");
+				dev.valor_total				= rs.getDouble("valor_total");
+				dev.multa					= rs.getDouble("multa");
+				dev.valor_recebido			= rs.getDouble("valor_recebido");
+				dev.id_pd_locacao			= rs.getInt("id_pd_locacao");
+				dev.valor_a_receber			= rs.getDouble("valor_a_receber");
+				dev.filme.situacao			= rs.getString("situacao");
+				ls.add(dev);
 			}
 			closeConnection();
 			return ls;
@@ -546,6 +743,30 @@ public class FireBird
 			return null;
 		}
 	}
+	public CLIENTES selectBuscaCliente(String nome)
+	{
+		try
+		{
+			query = "select * from clientes where nome = '"+nome+"';";
+			rs = statement.executeQuery(query.toUpperCase());
+			CLIENTES gen 	= new CLIENTES();
+			rs.next();
+			gen.id_clientes = rs.getInt(1);
+			gen.nome 		= rs.getString(2);
+			gen.endereco 	= rs.getString(3);
+			gen.fone    	= rs.getString(4);
+			gen.cpf			= rs.getString(5);
+			gen.cep			= rs.getString(6);
+			closeConnection();
+			return gen;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
+	
 	public FILMES pedidoDeFilme(int id_filmes,int id_clientes)
 	{
 		try
@@ -626,6 +847,36 @@ public class FireBird
 			return null;
 		}
 	}
+	public String[] selectReserva(int id_reserva)
+	{
+		try
+		{
+			query = "select id_filmes_1,id_filmes_2,id_filmes_3,id_filmes_4,id_filmes_5,situacao, " +
+					"situacao_1,situacao_2,situacao_3,situacao_4,situacao_5 " +
+					"from reserva where id_reserva = "+id_reserva+";";
+			rs = statement.executeQuery(query.toUpperCase());
+			String id_filmes[] = new String[11];
+			rs.next();
+			id_filmes[0] 		= String.valueOf(rs.getInt(1));
+			id_filmes[1] 		= String.valueOf(rs.getInt(2));
+			id_filmes[2] 		= String.valueOf(rs.getInt(3));
+			id_filmes[3] 		= String.valueOf(rs.getInt(4));
+			id_filmes[4] 		= String.valueOf(rs.getInt(5));
+			id_filmes[5] 		= rs.getString(6);
+			id_filmes[6] 		= rs.getString(7);
+			id_filmes[7] 		= rs.getString(8);
+			id_filmes[8] 		= rs.getString(9);
+			id_filmes[9] 		= rs.getString(10);
+			id_filmes[10] 		= rs.getString(11);
+			closeConnection();
+			return id_filmes;
+		}
+		catch(Exception e)
+		{
+			closeConnection();
+			return null;
+		}
+	}
 	public FILMES selectBuscaFilme(int id_filme)
 	{
 		try
@@ -702,7 +953,7 @@ public class FireBird
 			return null;
 		}
 	}
-	public void closeConnection() 
+	private void closeConnection() 
 	{
 		try
 		{	statement.close();}
@@ -734,7 +985,13 @@ public class FireBird
 			return false;
 		}
 	}
-	public boolean connect()
+	public boolean testConnection()
+	{
+		boolean b = connect();
+		closeConnection();
+		return b;
+	}
+	private boolean connect()
 	{
 		try 
 		{
@@ -770,34 +1027,6 @@ public class FireBird
 				}
 			}
 		}
-	}
-	public String getDBURL() 
-	{
-		return DBURL;
-	}
-	public void setDBURL(String dBURL) 
-	{
-		DBURL = dBURL;
-	}
-	public void setPath(String path)
-	{
-		DBURL ="jdbc:firebirdsql:127.0.0.1:" + path;
-	}
-	public String getUSER() 
-	{
-		return USER;
-	}
-	public void setUSER(String uSER) 
-	{
-		USER = uSER;
-	}
-	public String getPASSW() 
-	{
-		return PASSW;
-	}
-	public void setPASSW(String pASSW) 
-	{
-		PASSW = pASSW;
 	}
 	/*
 	Contador que funciona!!!!!!!!!! 

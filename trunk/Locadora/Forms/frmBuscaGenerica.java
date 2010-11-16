@@ -2,6 +2,7 @@ package Forms;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -23,6 +24,7 @@ import javax.swing.table.DefaultTableModel;
 import Banco.FireBird;
 import Locadora.CATEGORIAFILMES;
 import Locadora.CLIENTES;
+import Locadora.DEVOLUCAO;
 import Locadora.FILMES;
 import Locadora.GENERO;
 import Locadora.LOCACAO;
@@ -57,6 +59,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 	private ArrayList<CLIENTES> lsClientes;
 	private ArrayList<PROMOCAO> lsPromocao;
 	private ArrayList<LOCACAO> lsLocacao;
+	private ArrayList<DEVOLUCAO> lsDevolucao;
 	
 	public static final int BUSCA_FILMES = 1;
 	public static final int BUSCA_FILMES_PARA_LOCACAO = 2;
@@ -167,6 +170,11 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				if(instanceBuscaDevolocao == null)
 					instanceBuscaDevolocao = new frmBuscaGenerica(tipo);
 				instanceBuscaDevolocao.frame.requestFocus();
+				Rectangle rec = instanceBuscaDevolocao.btnCancelar.getBounds();
+				Rectangle recEditar = instanceBuscaDevolocao.btnEditar.getBounds();
+				instanceBuscaDevolocao.btnCancelar.setBounds(rec.x, recEditar.y, rec.width, recEditar.height);
+				instanceBuscaDevolocao.btnExcluir.setVisible(false);
+				instanceBuscaDevolocao.btnEditar.setText("Controle");
 				return instanceBuscaDevolocao;
 			case BUSCA_RESERVA:
 				if(instanceBuscaReserva == null)
@@ -411,18 +419,19 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			case BUSCA_DEVOLUCAO:
 				table.getColumnModel().getColumn(0).setHeaderValue("Cód");
 				table.getColumnModel().getColumn(1).setHeaderValue("Nome do cliente");
-				table.getColumnModel().getColumn(2).setHeaderValue("Valor");
+				table.getColumnModel().getColumn(2).setHeaderValue("Valor unitário");
 				table.getColumnModel().getColumn(3).setHeaderValue("Data locação");
 				table.getColumnModel().getColumn(4).setHeaderValue("Data entrega");
 				table.getColumnModel().getColumn(5).setHeaderValue("Telefone");
 				table.getColumnModel().getColumn(6).setHeaderValue("CPF");
 				table.getColumnModel().getColumn(7).setHeaderValue("Situação");
 				table.getColumnModel().getColumn(0).setMaxWidth(50);
-				table.getColumnModel().getColumn(1).setPreferredWidth(200);
+				table.getColumnModel().getColumn(1).setPreferredWidth(150);
 				table.getColumnModel().getColumn(2).setMaxWidth(80);
 				table.getColumnModel().getColumn(3).setMaxWidth(90);
 				table.getColumnModel().getColumn(4).setMaxWidth(90);
-				table.getColumnModel().getColumn(5).setMaxWidth(90);
+				table.getColumnModel().getColumn(5).setMaxWidth(110);
+				table.getColumnModel().getColumn(6).setMaxWidth(110);
 			break;
 			case BUSCA_RESERVA:
 				table.getColumnModel().getColumn(0).setHeaderValue("Cód");
@@ -434,8 +443,9 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				table.getColumnModel().getColumn(0).setMaxWidth(50);
 				table.getColumnModel().getColumn(1).setMaxWidth(90);
 				table.getColumnModel().getColumn(2).setPreferredWidth(250);
+				table.getColumnModel().getColumn(2).setMaxWidth(250);
 				table.getColumnModel().getColumn(3).setMaxWidth(90);
-				table.getColumnModel().getColumn(4).setMaxWidth(90);
+				table.getColumnModel().getColumn(4).setMaxWidth(110);
 				table.getColumnModel().getColumn(5).setMaxWidth(120);
 				table.getColumnModel().getColumn(5).setPreferredWidth(120);
 			break;
@@ -602,7 +612,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		JOptionPane.QUESTION_MESSAGE);
 		return i !=1;
 	}
-	public void onPressed_btnExcluir()
+	private void onPressed_btnExcluir()
 	{
 		foiPressionadoEditar = false;
 		switch(tipoForm)
@@ -694,7 +704,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 		}
 	}
-	public void onPressed_btnNovo()
+	private void onPressed_btnNovo()
 	{
 		foiPressionadoEditar = false;
 		switch(tipoForm)
@@ -703,7 +713,6 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			case BUSCA_FILMES_PARA_LOCACAO:
 			case BUSCA_FILMES_PARA_RESERVAS:
 				frmCadastroFilmes.getInstance();
-				this.frame.dispose();
 			break;
 			case BUSCA_CATEGORIA_FILMES:
 				frmCategoria.getInstance();
@@ -718,21 +727,18 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			break;
 			case BUSCA_LOCACAO:
 				frmPedidoLocacao.getInstance();
-				this.frame.dispose();
 			break;
 			case BUSCA_PROMOCAO:
 				frmPromocao.getInstance();
 			break;
 			case BUSCA_DEVOLUCAO:
-				frmDevolucaoPagamento.getInstance();
 			break;
 			case BUSCA_RESERVA:
 				frmReserva.getInstance();
-				this.frame.dispose();
 			break;
 		}
-		//this.frame.dispose();
 	}
+	
 	private void onPressed_btnPesquisar()
 	{
 		btnPesquisar.setEnabled(false);
@@ -758,6 +764,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				pesquisaLocacao();
 				break;
 			case BUSCA_DEVOLUCAO://8 totalCol
+				pesquisaDevolucao();
 				break;
 			case BUSCA_RESERVA://6 totalCol
 				pesquisaDeReserva();
@@ -767,6 +774,46 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 				break;
 		}
 		btnPesquisar.setEnabled(true);
+	}
+	private void pesquisaDevolucao()
+	{
+		FireBird fireBird = FireBird.getInstance();
+		lsDevolucao = fireBird.selectBuscaDevolucao(txtBuscaTexto.getText(), txtBuscaNumero.getText());
+		if(lsDevolucao==null)
+			return;
+		int size = lsDevolucao.size();
+		if(size >= 17)
+		{
+			model = new DefaultTableModel(size,8);
+			table.setModel(model);
+			ajusteColunas();
+		}
+		else
+		{
+			int rows = table.getRowCount(),totalCol = 8;
+			for(int count = 0; count < rows; count++)
+			{
+				for(int i=0; i < totalCol;i++)
+					table.getModel().setValueAt("", count, i);
+			}
+		}
+		if(size==0)
+			return;
+		
+		for(int count=0; count < size; count++)
+		{
+			DEVOLUCAO dev  = lsDevolucao.get(count);
+			dev.cliente = FireBird.getInstance().selectBuscaCliente(dev.cliente.id_clientes);
+			dev.data_locacao = FireBird.getInstance().selectBuscaDataLocacao(dev.id_pd_locacao,dev.cliente.id_clientes);
+			model.setValueAt(dev.filme.id_devolucao, count, 0);
+			model.setValueAt(dev.cliente.nome, count, 1);
+			model.setValueAt(UTIL.formateRS(dev.valor_unitario),count, 2);
+			model.setValueAt(dev.data_locacao, count, 3);
+			model.setValueAt(dev.data_entrega, count, 4);
+			model.setValueAt(dev.cliente.fone, count, 5);
+			model.setValueAt(dev.cliente.cpf,  count, 6);
+			model.setValueAt(dev.filme.situacao,count, 7);
+		}
 	}
 	private void pesquisaLocacao()
 	{
@@ -795,8 +842,8 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			LOCACAO locacao = lsLocacao.get(count);
 			model.setValueAt(locacao.id_pd_locacao, count, 0);
 			model.setValueAt(locacao.nome, count, 1);
-			model.setValueAt(locacao.valor, count, 2);
-			model.setValueAt(locacao.data, count, 3);
+			model.setValueAt(UTIL.formateRS(Double.parseDouble(locacao.valor)), count, 2);
+			model.setValueAt(UTIL.alterMesDiaData(locacao.data), count, 3);
 			model.setValueAt(locacao.fone, count, 4);
 			model.setValueAt(locacao.cpf, count, 5);
 		}
@@ -829,7 +876,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			model.setValueAt(reserva.id_reserva, count, 0);
 			model.setValueAt(reserva.situacao, count, 1);
 			model.setValueAt(reserva.cliente.nome, count, 2);
-			//model.setValueAt(reserva.nome_genero, count, 3);
+			model.setValueAt(UTIL.alterMesDiaData(reserva.data), count, 3);
 			model.setValueAt(reserva.cliente.fone, count, 4);
 			model.setValueAt(reserva.cliente.cpf, count, 5);
 		}
@@ -896,7 +943,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			CATEGORIAFILMES cf = lsCatFilmes.get(count);
 			model.setValueAt(cf.id_categoria, count, 0);
 			model.setValueAt(cf.nome, count, 1);
-			model.setValueAt(cf.preco, count, 2);
+			model.setValueAt(UTIL.formateRS(cf.preco), count, 2);
 		}
 	}
 	private void pesquisaPromocao()
@@ -927,7 +974,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			model.setValueAt(gen.id_promocao, count, 0);
 			model.setValueAt(gen.nome, count, 1);
 			model.setValueAt(gen.nome_categoria,count,2);
-			model.setValueAt(gen.preco, count, 3);
+			model.setValueAt(UTIL.formateRS(gen.preco), count, 3);
 			model.setValueAt(gen.qtde_filmes, count, 4);
 			model.setValueAt(String.valueOf(gen.qtde_dias), count, 5);
 		}
@@ -1001,7 +1048,8 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			cf.id_categoria = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
 			cf.nome = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),1);
-			cf.preco = (Double)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),2);
+			String p = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),2);
+			cf.preco = Double.parseDouble(p.replace(",", ".")); 
 		}
 		catch(Exception ex)
 		{
@@ -1017,6 +1065,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			filme.id_filmes = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
 			filme.nome = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),1);
+			filme.preco = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),2);
 			filme.qtde = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),4);
 			filme.qtde_disponivel = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),5);
 			int size = lsFilmes.size();
@@ -1030,6 +1079,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 					filme.nome_categoria	= f.nome_categoria;
 					filme.nome_genero		= f.nome_genero;
 					filme.sinopse			= f.sinopse;
+					//filme.preco				= f.preco;
 					break;
 				}
 			}
@@ -1087,6 +1137,42 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 			return -1;
 		}
 	}
+	private ArrayList<DEVOLUCAO> getDevolucaoFromTable()
+	{
+		try
+		{
+			int id_devolucao = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
+			int id_pd_locacao =0;
+			int size = lsDevolucao.size();
+			//primeiro acha o id_pd_locacao
+			for(int i=0;i<size;i++)
+			{
+				DEVOLUCAO dev = lsDevolucao.get(i);
+				if(dev.filme.id_devolucao == id_devolucao)
+				{
+					id_pd_locacao = dev.id_pd_locacao;
+					break;
+				}
+			}
+			//cria uma lista e adiciona todas devoluções onde o id_pd_locação são iguais
+			ArrayList<DEVOLUCAO> lsDevolucao_ = new ArrayList<DEVOLUCAO>();
+			for(int i=0;i<size;i++)
+			{
+				DEVOLUCAO dev = lsDevolucao.get(i);
+				if(id_pd_locacao == dev.id_pd_locacao)
+				{
+					lsDevolucao_.add(dev);
+				}
+			}
+			return lsDevolucao_;
+		}
+		catch(Exception ex)
+		{
+			JOptionPane.showMessageDialog(this,"Nenhum registro foi selecionado.");
+			return null;
+		}
+	}
+	
 	private RESERVA getReservaFromTable()
 	{
 		RESERVA gen = new RESERVA();
@@ -1094,9 +1180,25 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			gen.id_reserva = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
 			gen.situacao = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),1);
-			gen.cliente.nome = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),2);
-			gen.cliente.fone = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),4);
-			gen.cliente.cpf = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),5);
+			int size = lsReserva.size();
+			for(int i=0; i <size; i++)
+			{
+				RESERVA r = lsReserva.get(i);
+				if(r.id_reserva == gen.id_reserva)
+				{
+					gen.cliente = FireBird.getInstance().selectBuscaCliente(r.cliente.id_clientes);
+					break;
+				}
+			}
+			String[] str_id_filmes = FireBird.getInstance().selectReserva(gen.id_reserva);
+			for(int i=0; i<5;i++)
+			{
+				FILMES filme = FireBird.getInstance().selectBuscaFilme(Integer.parseInt(str_id_filmes[i]));
+				if(filme!=null)
+					gen.filmes.add(filme);
+				gen.situacao_individual[i] = str_id_filmes[i+6];
+			}
+			gen.situacao = str_id_filmes[5];
 		}
 		catch(Exception ex)
 		{
@@ -1112,7 +1214,8 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		{
 			gen.id_promocao = (Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0);
 			gen.nome = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),1);
-			gen.preco = (Double)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),3);
+			String p = (String)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),3);
+			gen.preco = Double.parseDouble(p.replace(",","."));
 			int size = lsPromocao.size();
 			for(int i=0; i< size; i++)
 			{
@@ -1151,7 +1254,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		catch(Exception exc)
 		{}
 	}
-	public void onPressed_btnSelecionar()
+	private void onPressed_btnSelecionar()
 	{
 		
 		try
@@ -1211,7 +1314,7 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 		catch(Exception exc)
 		{}
 	}
-	public void onPressed_btnEditar()
+	private void onPressed_btnEditar()
 	{
 		foiPressionadoEditar = true;
 		switch(tipoForm)
@@ -1249,7 +1352,9 @@ public class frmBuscaGenerica extends JPanel implements ActionListener
 					frmPromocao.getInstance(pr);
 			break;
 			case BUSCA_DEVOLUCAO:
-				frmDevolucaoPagamento.getInstance();
+					ArrayList<DEVOLUCAO> dev = getDevolucaoFromTable();
+					if(dev!=null)
+						frmDevolucaoPagamento.getInstance(dev,(Integer)model.getValueAt(table.getSelectionModel().getLeadSelectionIndex(),0));
 			break;
 			case BUSCA_RESERVA:
 				RESERVA reserva = getReservaFromTable();
